@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Kitchen | المطبخ العالمي - أدوات المطبخ والطهي الفاخرة</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="المطبخ العالمي هو وجهتك الأولى لتسوق أدوات المطبخ والطهي الفاخرة، المائدة الأنيقة، الأجهزة المنزلية الصغيرة، والمنظمات الذكية. تسوق الآن بجودة لا مثيل لها.">
+  <meta name="keywords" content="أدوات مطبخ، قدور طهي، أطباق بورسلين، قوالب كيك، منظمات مطبخ، أجهزة مطبخ كهربائية، المطبخ العالمي">
+  <meta name="author" content="Global Kitchen Team">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Modular Stylesheets -->
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/header.css">
+  <link rel="stylesheet" href="css/hero.css">
+  <link rel="stylesheet" href="css/products.css">
+  <link rel="stylesheet" href="css/cart.css">
+  <link rel="stylesheet" href="css/checkout.css">
+</head>
+<body>
+
+  <!-- TOAST NOTIFICATION ALERTS -->
+  <div id="toast-notification-container" class="toast-container"></div>
+
+  <!-- NAVIGATION HEADER -->
+  <header>
+    <div class="container navbar">
+      <!-- Brand Logo -->
+      <a href="#" class="logo">
+        <img src="assets/logo.jpg" alt="Global Kitchen Logo" class="logo-img">
+        <div class="brand-name">
+          <span data-i18n="logo_text_1">المطبخ</span>
+          <span data-i18n="logo_text_2" style="color: var(--dark-charcoal);">العالمي</span>
+        </div>
+      </a>
+      
+      <!-- Search Component -->
+      <div class="search-container">
+        <input type="text" id="search-input-box" class="search-input" data-i18n="search_placeholder" placeholder="ابحث عن أدوات مطبخ فاخرة...">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      </div>
+      
+        <!-- Dashboard Link Button -->
+        <a href="admin.html" class="lang-btn" style="background:linear-gradient(135deg, #6366f1, #8b5cf6); color:#fff; border:none; text-decoration:none; display:inline-flex; align-items:center; gap:6px; font-weight:700; padding:6px 14px; border-radius:6px;">
+          <i class="fa-solid fa-gauge-high"></i> لوحة التحكم
+        </a>
+
+        <!-- Language Switcher Button -->
+        <button id="lang-switch-btn" class="lang-btn" data-i18n="lang_btn">English</button>
+        
+        <!-- Shopping Cart Icon Badge -->
+        <a href="#" id="navbar-cart-trigger" class="cart-trigger">
+          <i class="fa-solid fa-basket-shopping"></i>
+          <span id="cart-badge-count" class="cart-count">0</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- HERO SLIDER SECTION -->
+    <section class="hero-section">
+      <div class="hero-slider">
+        <!-- Slide 1: Cookware -->
+        <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&q=80&w=1200');">
+          <div class="hero-content">
+            <span class="hero-badge" data-i18n="slide1_badge">أدوات طهي فاخرة</span>
+            <h2 class="hero-title" data-i18n="slide1_title">الخبز والطهي من القلب!</h2>
+            <p class="hero-description" data-i18n="slide1_desc">اكتشفي مجموعة القدور ثلاثية الطبقات والحديد الزهر وقوالب السيليكون المصممة خصيصاً لتناسب الطهاة المحترفين.</p>
+            <a href="#explore-products" class="hero-btn">
+              <span data-i18n="slide1_btn">تسوق أدوات الطهي الآن</span>
+              <i class="fa-solid fa-arrow-left arrow-icon"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Slide 2: Smart Organizers -->
+        <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1596040033229-a9821ebd058d?auto=format&fit=crop&q=80&w=1200');">
+          <div class="hero-content">
+            <span class="hero-badge" data-i18n="slide2_badge">مطبخ ذكي ومنظم</span>
+            <h2 class="hero-title" data-i18n="slide2_title">ارتقِ بمستوى مطبخك اليوم</h2>
+            <p class="hero-description" data-i18n="slide2_desc">تصفح مطاحن القهوة، غلايات التحكم بالحرارة، والمنظمات الذكية التي تسهل عليك مهام المطبخ اليومية.</p>
+            <a href="#explore-products" class="hero-btn">
+              <span data-i18n="slide2_btn">استكشف الأجهزة الذكية</span>
+              <i class="fa-solid fa-arrow-left arrow-icon"></i>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Navigation Arrows -->
+        <a href="#" class="slider-arrow arrow-prev"><i class="fa-solid fa-chevron-right"></i></a>
+        <a href="#" class="slider-arrow arrow-next"><i class="fa-solid fa-chevron-left"></i></a>
+        
+        <!-- Slides Indicators Dots -->
+        <div class="slider-dots">
+          <span class="slider-dot active"></span>
+          <span class="slider-dot"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CATEGORY SELECTION FILTERS -->
+    <section class="categories-container">
+      <div id="category-tabs-row" class="category-tabs">
+        <!-- Dynamically rendered tabs -->
+      </div>
+    </section>
+
+    <!-- PRODUCT CATALOG LISTING -->
+    <section id="explore-products" class="section-header">
+      <h2 id="catalog-section-title" class="section-title" data-i18n="section_title">استكشف منتجاتنا</h2>
+      <div id="products-grid-row" class="products-grid grid-cols-4" style="margin-top: 30px;">
+        <!-- Dynamically rendered cards -->
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-content">
+      <div class="footer-section">
+        <a href="#" class="footer-logo">
+          <img src="assets/logo.jpg" alt="Global Kitchen Logo">
+        </a>
+        <p style="margin-top: 10px; font-size: 14px; line-height: 1.5;">المطبخ العالمي هو خيارك الأفضل لتجهيز وتصميم مطبخ عصري مريح بأدوات متميزة الجودة وتصميم متطور وسهل الاستخدام.</p>
+      </div>
+      
+      <div class="footer-section">
+        <h4 data-i18n="cat_all">جميع الأقسام</h4>
+        <ul class="footer-links">
+          <li><a href="#" onclick="event.preventDefault(); FilterManager.setCategory('cookware')" data-i18n="cat_cookware">القدور وقوالب الخبز</a></li>
+          <li><a href="#" onclick="event.preventDefault(); FilterManager.setCategory('utensils')" data-i18n="cat_utensils">الأدوات والمقاشر</a></li>
+          <li><a href="#" onclick="event.preventDefault(); FilterManager.setCategory('tableware')" data-i18n="cat_tableware">المائدة والأكواب</a></li>
+          <li><a href="#" onclick="event.preventDefault(); FilterManager.setCategory('appliances')" data-i18n="cat_appliances">الأجهزة الكهربائية</a></li>
+          <li><a href="#" onclick="event.preventDefault(); FilterManager.setCategory('storage')" data-i18n="cat_storage">التخزين والمنظمات</a></li>
+        </ul>
+      </div>
+      
+      <div class="footer-section">
+        <h4 data-i18n="shipping">الشحن والتوصيل</h4>
+        <p style="font-size: 14px; line-height: 1.6;">نوفر خدمة توصيل سريعة وموثوقة لجميع المحافظات. إمكانية الفحص عند الاستلام وسياسة إرجاع مرنة وسهلة.</p>
+      </div>
+    </div>
+    
+    <div class="container footer-bottom">
+      <p>&copy; 2026 Global Kitchen (المطبخ العالمي). All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- CART BLUR OVERLAY -->
+  <div id="cart-overlay-blur" class="cart-overlay"></div>
+
+  <!-- SHOPPING CART SLIDING DRAWER -->
+  <div id="cart-drawer-panel" class="cart-drawer">
+    <div class="cart-header">
+      <h3 class="cart-title">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <span data-i18n="cart_title">سلة المشتريات</span>
+      </h3>
+      <button id="cart-drawer-close-btn" class="cart-close-btn"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div id="cart-items-container" class="cart-body">
+      <!-- Dynamically rendered cart items -->
+    </div>
+    
+    <div class="cart-footer">
+      <div class="cart-totals">
+        <div class="cart-total-row">
+          <span data-i18n="subtotal">المجموع الفرعي</span>
+          <span id="cart-subtotal-val">$0.00</span>
+        </div>
+        <div class="cart-total-row">
+          <span data-i18n="shipping">الشحن</span>
+          <span data-i18n="shipping_val">يُحسب في الخطوة التالية</span>
+        </div>
+        <div class="cart-total-row grand-total">
+          <span data-i18n="grand_total">الإجمالي التقريبي</span>
+          <span id="cart-grand-val">$0.00 USD</span>
+        </div>
+      </div>
+      
+      <button id="drawer-checkout-btn" class="checkout-btn">
+        <span data-i18n="checkout_btn">الذهاب للدفع</span>
+        <i class="fa-solid fa-lock"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- CHECKOUT MODAL OVERLAY -->
+  <div id="checkout-modal-overlay" class="checkout-modal-container">
+    <div class="checkout-modal">
+      <div class="checkout-modal-header">
+        <h3 class="checkout-modal-title">
+          <i class="fa-solid fa-lock"></i>
+          <span data-i18n="checkout_title">إتمام عملية الشراء</span>
+        </h3>
+        <button id="checkout-modal-header-close" class="checkout-close-btn"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div id="checkout-modal-body-content" class="checkout-modal-body">
+        <form id="checkout-billing-form" class="checkout-grid">
+          <!-- Step 1: Billing and Delivery Address -->
+          <div class="checkout-form-section">
+            <h4 class="checkout-section-title" data-i18n="shipping_details">١. تفاصيل الشحن والتوصيل</h4>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bill-fname" class="form-label" data-i18n="first_name">الاسم الأول *</label>
+                <input type="text" id="bill-fname" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="bill-lname" class="form-label" data-i18n="last_name">الاسم الأخير *</label>
+                <input type="text" id="bill-lname" class="form-input" required>
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group">
+                <label for="bill-email" class="form-label" data-i18n="email">البريد الإلكتروني *</label>
+                <input type="email" id="bill-email" class="form-input" required>
+              </div>
+              <div class="form-group">
+                <label for="bill-phone" class="form-label" data-i18n="phone">رقم الهاتف *</label>
+                <input type="tel" id="bill-phone" class="form-input" placeholder="+20 1xx xxxx xxx" required>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="bill-address" class="form-label" data-i18n="address">عنوان التوصيل (الشارع / رقم المنزل) *</label>
+              <input type="text" id="bill-address" class="form-input" required>
+            </div>
+            
+            <div class="form-group">
+              <label for="bill-city" class="form-label" data-i18n="city">المدينة / المحافظة *</label>
+              <input type="text" id="bill-city" class="form-input" required>
+            </div>
+
+            <!-- Step 2: Payment Method Selector -->
+            <h4 class="checkout-section-title" data-i18n="payment_method" style="margin-top: 25px;">٢. طريقة الدفع</h4>
+            <div class="payment-options">
+              <!-- Credit Card Option -->
+              <div class="payment-card active" data-method="card">
+                <input type="radio" name="payment_radio" class="payment-radio" checked>
+                <div class="payment-card-details">
+                  <span class="payment-card-name" data-i18n="pay_card">بطاقة ائتمان / مدى</span>
+                  <div class="payment-card-icons">
+                    <i class="fa-brands fa-cc-visa"></i>
+                    <i class="fa-brands fa-cc-mastercard"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Cash On Delivery Option -->
+              <div class="payment-card" data-method="cod">
+                <input type="radio" name="payment_radio" class="payment-radio">
+                <div class="payment-card-details">
+                  <span class="payment-card-name" data-i18n="pay_cod">الدفع عند الاستلام</span>
+                  <div class="payment-card-icons">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Step 3: Checkout Order Summary list -->
+          <div class="order-summary-box">
+            <h4 class="checkout-section-title" data-i18n="order_summary">ملخص الطلب</h4>
+            <div id="checkout-summary-items" class="summary-items-list">
+              <!-- Dynamically populated summary items -->
+            </div>
+            
+            <div class="cart-totals" style="margin-top: 15px;">
+              <div class="summary-item-row" style="color: var(--text-muted);">
+                <span data-i18n="subtotal">المجموع الفرعي</span>
+                <span id="chk-subtotal-val">$0.00</span>
+              </div>
+              <div class="summary-item-row" style="color: var(--text-muted);">
+                <span data-i18n="shipping">الشحن</span>
+                <span style="color: #38A169; font-weight: 600;" data-i18n="new_badge">مجاني</span>
+              </div>
+              <div class="summary-item-row grand-total" style="font-size: 16px; font-weight: 700; color: var(--dark-charcoal); border-top: 1px dotted var(--border-color); padding-top: 10px; margin-top: 10px; display:flex; justify-content:space-between;">
+                <span data-i18n="grand_total">الإجمالي التقريبي</span>
+                <span id="chk-grand-val">$0.00 USD</span>
+              </div>
+            </div>
+            
+            <button type="submit" id="place-order-btn-submit" class="place-order-btn">
+              <span data-i18n="place_order">تأكيد وإرسال الطلب</span>
+              <i class="fa-solid fa-square-check"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase Cloud Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js?v=999"></script>
+  <script src="js/data.js"></script>
+  <script src="js/translations.js"></script>
+  <script src="js/cart.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/checkout.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

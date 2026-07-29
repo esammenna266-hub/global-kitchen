@@ -1,0 +1,300 @@
+/* ==========================================================================
+   CATEGORY TABS & PRODUCT GRID/CARD STYLES
+   ========================================================================== */
+
+/* Category Selection Tabs */
+.categories-container {
+  margin: 40px 0 20px 0;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.category-tabs {
+  display: flex;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+}
+
+/* Custom Scrollbar for Category Tabs on Mobile */
+.category-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+.category-tabs::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+.category-tab {
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.category-tab:hover,
+.category-tab.active {
+  color: var(--bg-white);
+  background-color: var(--dark-charcoal);
+  border-color: var(--dark-charcoal);
+}
+
+.category-tab.active {
+  box-shadow: var(--shadow-sm);
+}
+
+.category-tab.active-red {
+  background-color: var(--primary-red);
+  border-color: var(--primary-red);
+}
+
+/* Products Section Title */
+.section-header {
+  margin: 30px 0;
+}
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--dark-charcoal);
+  position: relative;
+  display: inline-block;
+  padding-bottom: 8px;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 50px;
+  height: 3px;
+  background-color: var(--primary-red);
+  border-radius: 2px;
+}
+
+body.rtl-lang .section-title::after {
+  left: auto;
+  right: 0;
+}
+
+/* Product Cards Grid */
+.products-grid {
+  min-height: 400px;
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 0;
+  color: var(--text-muted);
+}
+
+.no-results i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: var(--border-color);
+}
+
+/* Product Card Design (Houzecart Style) */
+.product-card {
+  background-color: var(--bg-white);
+  border: 1px solid var(--border-color);
+  border-radius: 4px; /* subtle rounding */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  transition: var(--transition);
+  padding: 10px; /* inner spacing for product box layout */
+}
+
+.product-card:hover {
+  border-color: #bbbbbb;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Image Container with Badge and Hover Actions */
+.product-image-container {
+  width: 100%;
+  padding-top: 100%; /* 1:1 Aspect Ratio */
+  position: relative;
+  background-color: #ffffff;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.product-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* contain image like product display */
+  transition: transform 0.4s ease;
+}
+
+/* Specification Overlay Tag (e.g. 22 cm) */
+.product-spec {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dark-charcoal);
+  border-bottom: 2px solid var(--dark-charcoal);
+  padding-bottom: 2px;
+  z-index: 10;
+  line-height: 1;
+}
+
+body.rtl-lang .product-spec {
+  left: auto;
+  right: 8px;
+}
+
+/* Discount & Tag Badges */
+.product-badges {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+body.rtl-lang .product-badges {
+  left: auto;
+  right: 8px;
+}
+
+.badge {
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 2px;
+  text-transform: uppercase;
+  color: var(--bg-white);
+}
+
+.badge-sale {
+  background-color: var(--primary-red);
+}
+
+.badge-new {
+  background-color: #38A169; /* green */
+}
+
+/* Card Body Content */
+.product-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: 5px 0 0 0;
+}
+
+.product-category {
+  display: none; /* hidden to match Houzecart screenshot */
+}
+
+.product-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #000000;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  line-height: 1.4;
+  height: 38px; /* fixed height for 2 lines */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #ECC94B; /* gold star */
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.product-rating span {
+  color: var(--text-muted);
+  margin-inline-start: 4px;
+}
+
+.product-bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--bg-light);
+}
+
+/* Pricing Layout */
+.product-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.current-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #000000;
+}
+
+.original-price {
+  font-size: 13px;
+  color: #999999;
+  text-decoration: line-through;
+}
+
+/* Wide Rectangular Add to Cart Button (Houzecart Style) */
+.add-to-cart-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.add-to-cart-btn-wide {
+  flex-grow: 1;
+  background-color: #EFEFEF;
+  color: #333333;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: 3px;
+  border: 1px solid #E5E5E5;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-to-cart-btn-wide:hover {
+  background-color: var(--primary-red);
+  color: var(--bg-white);
+  border-color: var(--primary-red);
+}
+
+.cart-qty-indicator {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-muted);
+  min-width: 15px;
+  text-align: center;
+}

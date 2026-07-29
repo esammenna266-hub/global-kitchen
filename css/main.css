@@ -1,0 +1,229 @@
+/* ==========================================================================
+   GLOBAL VARIABLES, RESETS & WATERMARK BACKGROUND
+   ========================================================================== */
+
+/* Google Fonts - Outfit for English, Cairo for Arabic */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Colors from Logo */
+  --primary-red: #D31018;
+  --primary-red-hover: #b50d13;
+  --primary-red-light: rgba(211, 16, 24, 0.08);
+  
+  --dark-charcoal: #2E2E2E;
+  --dark-charcoal-hover: #1e1e1e;
+  --text-dark: #333333;
+  --text-muted: #777777;
+  
+  --bg-light: #FAF9F6;
+  --bg-white: #FFFFFF;
+  --border-color: #E2E8F0;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.12);
+  
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  
+  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --font-en: 'Outfit', sans-serif;
+  --font-ar: 'Cairo', sans-serif;
+}
+
+/* Base Resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-en);
+  background-color: var(--bg-light);
+  color: var(--text-dark);
+  line-height: 1.6;
+  overflow-x: hidden;
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Watermark Background Styling */
+body::before {
+  content: "";
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70vmin;
+  height: 70vmin;
+  background-image: url('../assets/logo.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.025; /* Very subtle watermark */
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Arabic Layout (RTL) Class */
+body.rtl-lang {
+  font-family: var(--font-ar);
+  direction: rtl;
+  text-align: right;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Button Reset */
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition);
+}
+
+/* Typography elements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* Common Layout Helpers */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.grid-cols-4 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+/* Toast Notifications */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+body.rtl-lang .toast-container {
+  right: auto;
+  left: 24px;
+}
+
+.toast {
+  background-color: var(--dark-charcoal);
+  color: var(--bg-white);
+  padding: 12px 24px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: slideInUp 0.3s ease forwards;
+}
+
+.toast.success {
+  border-left: 4px solid var(--primary-red);
+}
+
+body.rtl-lang .toast.success {
+  border-left: none;
+  border-right: 4px solid var(--primary-red);
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Footer Section */
+footer {
+  background-color: var(--dark-charcoal);
+  color: #cccccc;
+  padding: 60px 0 20px 0;
+  margin-top: 80px;
+  position: relative;
+  z-index: 10;
+}
+
+.footer-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 40px;
+  margin-bottom: 40px;
+}
+
+.footer-logo img {
+  height: 60px;
+  margin-bottom: 15px;
+  border-radius: var(--radius-sm);
+  background: white;
+  padding: 2px;
+}
+
+.footer-section h4 {
+  color: var(--bg-white);
+  margin-bottom: 20px;
+  font-size: 18px;
+}
+
+.footer-links li {
+  list-style: none;
+  margin-bottom: 12px;
+}
+
+.footer-links a:hover {
+  color: var(--primary-red);
+  padding-left: 5px;
+}
+
+body.rtl-lang .footer-links a:hover {
+  padding-left: 0;
+  padding-right: 5px;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 14px;
+}

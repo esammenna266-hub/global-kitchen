@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>المطبخ العالمي | لوحة التحكم والإدارة الفاخرة</title>
+    <!-- Google Fonts: Tajawal & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS for Excel Reading -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- PDF.js for PDF Reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="css/admin.css?v=1.0">
+</head>
+<body class="light-theme">
+
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <i data-lucide="shopping-bag" class="brand-icon"></i>
+                    <div class="brand-text">
+                        <h2>Global <span>Kitchen</span></h2>
+                        <p>لوحة التحكم والإدارة الموحدة</p>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="index.html" class="nav-item return-store-btn">
+                    <i data-lucide="arrow-right-left"></i>
+                    <span>🛒 العودة إلى المتجر</span>
+                </a>
+                <button class="nav-item active" data-tab="overview">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>النظرة العامة</span>
+                </button>
+                <button class="nav-item" data-tab="products">
+                    <i data-lucide="package"></i>
+                    <span>إدارة المنتجات</span>
+                    <span class="badge badge-primary" id="sidebar-product-count">0</span>
+                </button>
+                <button class="nav-item highlight" data-tab="import-center">
+                    <i data-lucide="file-up"></i>
+                    <span>استيراد PDF & Excel</span>
+                    <span class="badge badge-success">ذكي</span>
+                </button>
+                <button class="nav-item" data-tab="orders">
+                    <i data-lucide="shopping-cart"></i>
+                    <span>إدارة الطلبات</span>
+                    <span class="badge badge-warning" id="sidebar-pending-count">0</span>
+                </button>
+                <button class="nav-item" data-tab="customers">
+                    <i data-lucide="users"></i>
+                    <span>العملاء</span>
+                </button>
+                <button class="nav-item" data-tab="analytics">
+                    <i data-lucide="line-chart"></i>
+                    <span>الإحصائيات والمالية</span>
+                </button>
+                <button class="nav-item" data-tab="settings">
+                    <i data-lucide="settings"></i>
+                    <span>إعدادات WooCommerce</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="store-status-card">
+                    <div class="status-indicator online"></div>
+                    <div class="status-info">
+                        <span class="store-mode-label" id="store-mode-text">المتجر الموحد نشط</span>
+                        <small id="store-url-text">globalkitchen.local</small>
+                    </div>
+                </div>
+                <div class="theme-toggle-btn" id="theme-toggle">
+                    <i data-lucide="moon" id="theme-icon"></i>
+                    <span id="theme-text">الوضع الداكن</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <header class="top-navbar">
+                <div class="nav-left">
+                    <button class="mobile-menu-btn" id="mobile-toggle">
+                        <i data-lucide="menu"></i>
+                    </button>
+                    <div class="page-title-heading">
+                        <h1 id="current-tab-title">النظرة العامة</h1>
+                        <p id="current-tab-sub">مرحباً بك في لوحة تحكم متجرك الموحد</p>
+                    </div>
+                </div>
+                <div class="nav-right">
+                    <a href="index.html" class="btn btn-secondary btn-sm" style="text-decoration:none;">
+                        <i data-lucide="store"></i> عرض المتجر مباشرة
+                    </a>
+                    <button class="btn btn-secondary btn-sm" onclick="localStorage.clear(); location.reload();" title="تحديث البيانات">
+                        <i data-lucide="refresh-cw"></i> إعادة ضبط البيانات
+                    </button>
+                    <div class="global-search">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="global-search-input" placeholder="بحث في المنتجات، الطلبات، والعملاء...">
+                    </div>
+                    <button class="action-icon-btn" id="btn-quick-import" title="رفع ملف منتجات سريع">
+                        <i data-lucide="upload-cloud"></i>
+                    </button>
+                    <div class="user-profile">
+                        <div class="avatar">أ</div>
+                        <div class="user-info">
+                            <span class="user-name">إدارة المتجر</span>
+                            <small class="user-role">Global Kitchen Admin</small>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- TAB 1: OVERVIEW -->
+            <section class="tab-content active" id="tab-overview">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card glass">
+                        <div class="stat-icon bg-gradient-purple">
+                            <i data-lucide="dollar-sign"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">إجمالي المبيعات</span>
+                            <h3 class="stat-value" id="stat-total-revenue">$0.00</h3>
+                            <span class="stat-trend positive">
+                                <i data-lucide="trending-up"></i> +14.2% مقارنة بالشهر الماضي
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card glass">
+                        <div class="stat-icon bg-gradient-blue">
+                            <i data-lucide="shopping-bag"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">إجمالي الطلبات</span>
+                            <h3 class="stat-value" id="stat-total-orders">0</h3>
+                            <span class="stat-trend positive">
+                                <i data-lucide="check-circle"></i> <span id="stat-completed-orders">0</span> مكتمل
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card glass">
+                        <div class="stat-icon bg-gradient-amber">
+                            <i data-lucide="clock"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">طلبات معلقة / لم تسلم</span>
+                            <h3 class="stat-value" id="stat-pending-orders">0</h3>
+                            <span class="stat-trend warning">
+                                <i data-lucide="alert-circle"></i> تحتاج متابعة فورية
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="stat-card glass">
+                        <div class="stat-icon bg-gradient-green">
+                            <i data-lucide="boxes"></i>
+                        </div>
+                        <div class="stat-details">
+                            <span class="stat-title">المنتجات في الكتالوج</span>
+                            <h3 class="stat-value" id="stat-total-products">0</h3>
+                            <span class="stat-trend neutral">
+                                <i data-lucide="file-text"></i> مسحبة من الملفات والمتجر
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Activity Row -->
+                <div class="dashboard-row margin-top-lg">
+                    <div class="chart-container glass flex-2">
+                        <div class="card-header">
+                            <div>
+                                <h3>أداء المبيعات والطلبات</h3>
+                                <p>تحليل الإيرادات والطلبات المسلمة</p>
+                            </div>
+                            <select id="overview-chart-timeframe" class="custom-select">
+                                <option value="7days">آخر 7 أيام</option>
+                                <option value="30days" selected>آخر 30 يوم</option>
+                                <option value="year">هذا العام</option>
+                            </select>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="overview-revenue-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="card glass flex-1">
+                        <div class="card-header">
+                            <h3>حالات الطلبات والتسليم</h3>
+                            <p>توزيع حالات الطلبات</p>
+                        </div>
+                        <div class="chart-wrapper flex-center">
+                            <canvas id="overview-status-chart"></canvas>
+                        </div>
+                        <div class="status-legend" id="overview-status-legend">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions & Recent Orders Row -->
+                <div class="dashboard-row margin-top-lg">
+                    <div class="card glass flex-2">
+                        <div class="card-header">
+                            <div>
+                                <h3>أحدث الطلبات</h3>
+                                <p>الطلبات الجديدة التي وردت مؤخراً</p>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" onclick="switchTab('orders')">
+                                عرض الكل <i data-lucide="arrow-left"></i>
+                            </button>
+                        </div>
+                        <div class="table-responsive">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>رقم الطلب</th>
+                                        <th>العميل</th>
+                                        <th>المنتجات</th>
+                                        <th>المبلغ</th>
+                                        <th>الحالة</th>
+                                        <th>التاريخ</th>
+                                        <th>إجراء</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="overview-recent-orders-body">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card glass flex-1">
+                        <div class="card-header">
+                            <h3>الاستيراد السريع</h3>
+                            <p>رفع ملفات Excel / PDF</p>
+                        </div>
+                        <div class="quick-import-dropzone" onclick="switchTab('import-center')">
+                            <i data-lucide="file-spreadsheet" class="drop-icon"></i>
+                            <h4>اسحب وأسقط ملف المنتجات هنا</h4>
+                            <p>يدعم ملفات PDF، Excel (.xlsx)، و CSV</p>
+                            <button class="btn btn-primary btn-sm margin-top-md">
+                                <i data-lucide="upload"></i> فتح مركز الاستيراد
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: PRODUCTS MANAGER -->
+            <section class="tab-content" id="tab-products">
+                <div class="section-actions-bar glass">
+                    <div class="filter-group">
+                        <div class="search-input-wrapper">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="products-search-input" placeholder="بحث باسم المنتج، SKU، أو الفئة...">
+                        </div>
+                        <select id="products-category-filter" class="custom-select">
+                            <option value="all">كل الفئات</option>
+                        </select>
+                        <select id="products-stock-filter" class="custom-select">
+                            <option value="all">كل حالات المخزون</option>
+                            <option value="instock">متوفر بالمخزون</option>
+                            <option value="lowstock">مخزون منخفض</option>
+                            <option value="outofstock">نفد من المخزون</option>
+                        </select>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="generateSampleExcelFile()">
+                            <i data-lucide="download"></i> تحميل شيت نماذج تجريبي
+                        </button>
+                        <button class="btn btn-primary" onclick="openAddProductModal()">
+                            <i data-lucide="plus"></i> إضافة منتج جديد
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card glass margin-top-md">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>الصورة</th>
+                                    <th>اسم المنتج</th>
+                                    <th>الكود (SKU)</th>
+                                    <th>الفئة</th>
+                                    <th>السعر</th>
+                                    <th>المخزون</th>
+                                    <th>المصدر</th>
+                                    <th>التحكم والإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-list-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: SMART IMPORT CENTER (PDF & EXCEL) -->
+            <section class="tab-content" id="tab-import-center">
+                <div class="import-banner glass">
+                    <div class="banner-content">
+                        <h2><i data-lucide="sparkles"></i> المستخرج الذكي لكتالوجات PDF وشيتات Excel</h2>
+                        <p>ارفع أي ملف PDF أو شيت إكسيل من الموردين، وسيقوم النظام الذكي بمسح وتفكيك كل الصفحات والجداول، واستخراج صور المنتجات والأسعار والأسماء تلقائياً وتجهيزها للعرض والإضافة لمتجرك!</p>
+                    </div>
+                    <div class="banner-actions">
+                        <button class="btn btn-light" onclick="loadDemoExcelFile()">
+                            <i data-lucide="play-circle"></i> تجربة استيراد شيت إكسيل تجريبي
+                        </button>
+                        <button class="btn btn-light-outline" onclick="loadDemoPdfFile()">
+                            <i data-lucide="file-text"></i> تجربة استيراد كتالوج PDF تجريبي
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Dropzone Area -->
+                <div class="dropzone-card glass margin-top-lg" id="import-dropzone" onclick="document.getElementById('import-file-input').click()" style="cursor:pointer; background:#ffffff; border:2px dashed var(--primary); padding:40px 20px;">
+                    <input type="file" id="import-file-input" accept=".xlsx, .xls, .csv, .pdf" style="display: none;" onclick="event.stopPropagation();">
+                    <div class="dropzone-content">
+                        <div class="upload-icon-wrapper">
+                            <i data-lucide="upload-cloud"></i>
+                        </div>
+                        <h3 style="font-size:1.25rem; font-weight:800; margin-bottom:6px; color:var(--text-main);">اسحب ملف Excel أو PDF هنا، أو اضغط لاختيار ملف من جهازك</h3>
+                        <p style="color:var(--text-secondary); margin-bottom:14px;">الصيغ المدعومة: Excel (.xlsx, .xls), CSV, وحديثاً PDF Multi-page Catalog</p>
+                        
+                        <button type="button" class="btn btn-primary btn-lg" onclick="event.stopPropagation(); document.getElementById('import-file-input').click();">
+                            <i data-lucide="folder-open"></i> اختيار وتصفح ملف من جهازك الآن
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Import Processing State -->
+                <div class="import-loading-card glass margin-top-lg hidden" id="import-loading-state">
+                    <div class="spinner"></div>
+                    <h3 id="import-loading-title">جاري تحليل وتقطيع الملف...</h3>
+                    <p id="import-loading-desc">يقوم المحرك الآن بقراءة الصفحات، استخراج الصور والأسعار ومطابقتها...</p>
+                    <div class="progress-bar-container margin-top-md">
+                        <div class="progress-bar-fill" id="import-progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Import Preview Section -->
+                <div class="import-preview-section hidden margin-top-lg" id="import-preview-container">
+                    <div class="section-header glass">
+                        <div>
+                            <h3>المنتجات المستخرجة من الملف (<span id="extracted-count">0</span> منتج)</h3>
+                            <p>راجع المنتجات والصور والأسعار قبل اعتمادها وإضافتها لكتالوج المتجر</p>
+                        </div>
+                        <div class="button-group">
+                            <button class="btn btn-secondary btn-sm" onclick="selectAllExtracted(true)">
+                                تحديد الكل
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="selectAllExtracted(false)">
+                                إلغاء التحديد
+                            </button>
+                            <button class="btn btn-success" onclick="commitSelectedProducts()">
+                                <i data-lucide="check-square"></i> إضافة المنتجات المحددة للكتالوج (<span id="selected-import-count">0</span>)
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="extracted-grid margin-top-md" id="extracted-products-grid">
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: ORDERS & DELIVERY TRACKER -->
+            <section class="tab-content" id="tab-orders">
+                <div class="section-actions-bar glass">
+                    <div class="filter-tabs" id="order-status-filter-tabs">
+                        <button class="filter-tab active" data-status="all">كل الطلبات (<span id="count-all-orders">0</span>)</button>
+                        <button class="filter-tab warning" data-status="pending">لم يتم التعليق / معلق (<span id="count-pending-orders">0</span>)</button>
+                        <button class="filter-tab info" data-status="processing">قيد المعالجة (<span id="count-processing-orders">0</span>)</button>
+                        <button class="filter-tab success" data-status="delivered">تم التسليم (<span id="count-delivered-orders">0</span>)</button>
+                        <button class="filter-tab danger" data-status="undelivered">لم يتم التسليم / مرتجع (<span id="count-undelivered-orders">0</span>)</button>
+                    </div>
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="orders-search-input" placeholder="بحث برقم الطلب، اسم العميل، أو الهاتف...">
+                    </div>
+                </div>
+
+                <div class="card glass margin-top-md">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>رقم الطلب</th>
+                                    <th>العميل ورقم الهاتف</th>
+                                    <th>المنتجات المطلوبة</th>
+                                    <th>إجمالي المبلغ</th>
+                                    <th>طريقة الدفع</th>
+                                    <th>تاريخ الطلب</th>
+                                    <th>حالة التسليم والطلب</th>
+                                    <th>تغيير الحالة</th>
+                                    <th>التفاصيل والإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-list-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: CUSTOMERS -->
+            <section class="tab-content" id="tab-customers">
+                <div class="section-actions-bar glass">
+                    <div class="search-input-wrapper">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="customers-search-input" placeholder="بحث باسم العميل، البريد، أو المدينة...">
+                    </div>
+                </div>
+                <div class="card glass margin-top-md">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>العميل</th>
+                                    <th>الهاتف والبريد</th>
+                                    <th>العنوان والمدينة</th>
+                                    <th>عدد الطلبات</th>
+                                    <th>إجمالي الإنفاق</th>
+                                    <th>آخر طلب</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-list-table-body">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: ANALYTICS -->
+            <section class="tab-content" id="tab-analytics">
+                <div class="dashboard-row">
+                    <div class="card glass flex-1">
+                        <div class="card-header">
+                            <h3>تقرير الإيرادات والمبيعات</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="analytics-revenue-full-chart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card glass flex-1">
+                        <div class="card-header">
+                            <h3>أكثر المنتجات مبيعاً</h3>
+                        </div>
+                        <div class="chart-wrapper">
+                            <canvas id="analytics-top-products-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 7: WOOCOMMERCE SETTINGS -->
+            <section class="tab-content" id="tab-settings">
+                <div class="card glass max-width-800 center-block">
+                    <div class="card-header">
+                        <div>
+                            <h3><i data-lucide="plug"></i> ربط متجر WooCommerce الحقيقي</h3>
+                            <p>قم بإدخال بيانات الـ API لربط اللوحة مباشرة بمتجرك</p>
+                        </div>
+                    </div>
+                    <form id="wc-settings-form" class="settings-form margin-top-md">
+                        <div class="form-group">
+                            <label>رابط موقع المتجر (Store URL)</label>
+                            <input type="url" id="wc-store-url" placeholder="https://my-store.com" class="custom-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Consumer Key (مفتاح العميل)</label>
+                            <input type="text" id="wc-consumer-key" placeholder="ck_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="custom-input" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Consumer Secret (مفتاح السر)</label>
+                            <input type="password" id="wc-consumer-secret" placeholder="cs_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" class="custom-input" required>
+                        </div>
+
+                        <div class="form-row margin-top-md">
+                            <button type="button" class="btn btn-secondary" onclick="testWooCommerceConnection()">
+                                <i data-lucide="wifi"></i> اختبار الاتصال بالمتجر
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i data-lucide="save"></i> حفظ الإعدادات وتفعيل الربط
+                            </button>
+                            <button type="button" class="btn btn-warning" onclick="resetToDemoMode()">
+                                <i data-lucide="refresh-cw"></i> التبديل إلى وضع الديمو التجريبي
+                            </button>
+                        </div>
+                    </form>
+                    <div id="connection-status-alert" class="alert-box hidden margin-top-md"></div>
+                </div>
+
+                <div class="card glass max-width-800 center-block margin-top-lg">
+                    <div class="card-header">
+                        <div>
+                            <h3><i data-lucide="database"></i> ربط قاعدة بيانات Supabase السحابية (Realtime Cloud Sync)</h3>
+                            <p>مزامنة سحابية لحظية بين متجر جلوبال كيتشن والداشبورد لتلقي الطلبات فوراً مع التنبيهات الصوتية</p>
+                        </div>
+                    </div>
+                    <form id="supabase-settings-form" class="settings-form margin-top-md" onsubmit="event.preventDefault(); window.supabaseManager.saveCredentials(document.getElementById('sp-url').value, document.getElementById('sp-key').value); alert('تم حفظ وتفعيل مفاتيح Supabase للربط السحابي بنجاح!');">
+                        <div class="form-group">
+                            <label>رابط مشروع Supabase (Project URL)</label>
+                            <input type="url" id="sp-url" placeholder="https://xyzcompany.supabase.co" class="custom-input">
+                        </div>
+                        <div class="form-group">
+                            <label>المفتاح العام (Supabase Anon Key)</label>
+                            <input type="password" id="sp-key" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="custom-input">
+                        </div>
+
+                        <div class="form-row margin-top-md">
+                            <button type="submit" class="btn btn-primary">
+                                <i data-lucide="zap"></i> حفظ وتفعيل الربط السحابي المباشر
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="document.getElementById('sql-schema-modal').classList.remove('hidden')">
+                                <i data-lucide="code"></i> نسخ كود SQL لإنشاء الجداول بنقرة واحدة
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL: SQL SCHEMA SETUP -->
+    <div class="modal-overlay hidden" id="sql-schema-modal">
+        <div class="modal-card glass max-width-700">
+            <div class="modal-header">
+                <h3>كود إنشاء جداول Supabase تلقائياً (SQL Query)</h3>
+                <button class="modal-close-btn" onclick="document.getElementById('sql-schema-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:12px; color:var(--text-secondary);">انسخ الكود التالي وضعه في قسم <strong>SQL Editor</strong> داخل حسابك على Supabase واضغط Run:</p>
+                <textarea id="sql-code-area" class="custom-textarea" rows="12" style="font-family:monospace; font-size:0.85rem;" readonly>
+-- Supabase SQL Schema for Global Kitchen
+create table if not exists products (
+  id text primary key,
+  title text not null,
+  sku text,
+  price numeric,
+  regular_price numeric,
+  stock integer default 15,
+  category text,
+  spec text,
+  image text,
+  description text,
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+create table if not exists orders (
+  id text primary key,
+  customer_name text,
+  customer_phone text,
+  customer_email text,
+  customer_address text,
+  customer_city text,
+  items jsonb,
+  total numeric,
+  payment_method text,
+  status text default 'pending',
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+
+alter publication supabase_realtime add table orders;
+alter publication supabase_realtime add table products;
+</textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="navigator.clipboard.writeText(document.getElementById('sql-code-area').value); alert('تم نسخ كود SQL بنجاح!');">
+                    <i data-lucide="copy"></i> نسخ الكود إلى الحافظة
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('sql-schema-modal').classList.add('hidden')">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ADD / EDIT PRODUCT -->
+    <div class="modal-overlay hidden" id="product-modal">
+        <div class="modal-card glass">
+            <div class="modal-header">
+                <h3 id="product-modal-title">إضافة منتج جديد</h3>
+                <button class="modal-close-btn" onclick="closeProductModal()"><i data-lucide="x"></i></button>
+            </div>
+            <form id="product-form" class="modal-body">
+                <input type="hidden" id="pm-product-id">
+                <div class="form-row">
+                    <div class="form-group flex-2">
+                        <label>اسم المنتج الكامل *</label>
+                        <input type="text" id="pm-title" class="custom-input" placeholder="مثال: علبة مونة صغيرة فوميه غطاء سحب ١.٢ لتر" required>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>كود المنتج (SKU) *</label>
+                        <input type="text" id="pm-sku" class="custom-input" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label>السعر بالدولار ($) *</label>
+                        <input type="number" step="0.01" id="pm-price" class="custom-input" placeholder="1.60" required>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>السعر الأصلي قبل الخصم ($)</label>
+                        <input type="number" step="0.01" id="pm-regular-price" class="custom-input" placeholder="2.00">
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>الفئة / التصنيف *</label>
+                        <input type="text" id="pm-category" class="custom-input" placeholder="مثال: منظمات ومؤونة">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label>كمية المخزون المتاحة *</label>
+                        <input type="number" id="pm-stock" class="custom-input" value="15" required>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>حالة المخزون</label>
+                        <select id="pm-stock-status" class="custom-select">
+                            <option value="instock">متوفر بالمخزون</option>
+                            <option value="lowstock">مخزون منخفض</option>
+                            <option value="outofstock">نفد من المخزون</option>
+                        </select>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label>السعة / المواصفة</label>
+                        <input type="text" id="pm-spec" class="custom-input" placeholder="مثال: 1.2 L">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>رابط صورة المنتج</label>
+                    <input type="text" id="pm-image" class="custom-input" placeholder="assets/products/img_p1_1.jpeg" onchange="document.getElementById('pm-img-preview').src = this.value">
+                    <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+                        <small style="color:var(--text-secondary);">معاينة الصورة الحالية:</small>
+                        <img id="pm-img-preview" src="" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid var(--border-subtle);" onerror="this.src='assets/products/img_p1_1.jpeg'">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>الوصف التفصيلي للمنتج</label>
+                    <textarea id="pm-description" class="custom-textarea" rows="3" placeholder="اكتب وصفاً شاملاً ومواصفات المنتج هنا..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeProductModal()">إلغاء والتراجع</button>
+                    <button type="submit" class="btn btn-primary"><i data-lucide="check"></i> حفظ الاعتماد وتحديث الكتالوج</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: ORDER DETAILS & INVOICE -->
+    <div class="modal-overlay hidden" id="order-details-modal">
+        <div class="modal-card glass max-width-700">
+            <div class="modal-header">
+                <h3>تفاصيل الطلب <span id="modal-order-id">#1001</span></h3>
+                <button class="modal-close-btn" onclick="closeOrderDetailsModal()"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" id="modal-order-content">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="printOrderInvoice()">
+                    <i data-lucide="printer"></i> طباعة الفاتورة
+                </button>
+                <button type="button" class="btn btn-primary" onclick="closeOrderDetailsModal()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application JavaScript Files -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/data.js?v=1.0"></script>
+    <script src="js/supabase-client.js?v=1.0"></script>
+    <script src="js/admin/woocommerce-api.js?v=1.0"></script>
+    <script src="js/admin/import-engine.js?v=1.0"></script>
+    <script src="js/admin/products-manager.js?v=1.0"></script>
+    <script src="js/admin/orders-manager.js?v=1.0"></script>
+    <script src="js/admin/analytics.js?v=1.0"></script>
+    <script src="js/admin/app.js?v=1.0"></script>
+</body>
+</html>

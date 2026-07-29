@@ -1,0 +1,174 @@
+/* ==========================================================================
+   HEADER & NAVIGATION BAR STYLES
+   ========================================================================== */
+
+header {
+  background-color: var(--bg-white);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+  padding: 15px 0;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Brand Logo */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-img {
+  height: 48px;
+  width: auto;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  border: 1px solid var(--border-color);
+}
+
+.brand-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--dark-charcoal);
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.brand-name span {
+  color: var(--primary-red);
+}
+
+/* Search Box Container */
+.search-container {
+  flex: 1;
+  max-width: 500px;
+  position: relative;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  padding-right: 40px; /* space for icon on right */
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 15px;
+  background-color: var(--bg-light);
+  transition: var(--transition);
+  color: var(--text-dark);
+}
+
+body.rtl-lang .search-input {
+  padding-right: 16px;
+  padding-left: 40px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-red);
+  background-color: var(--bg-white);
+  box-shadow: 0 0 0 3px rgba(211, 16, 24, 0.15);
+}
+
+.search-icon {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+body.rtl-lang .search-icon {
+  right: auto;
+  left: 14px;
+}
+
+/* Nav Actions (Cart, Lang Switch, Login) */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Language switch button */
+.lang-btn {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-color);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--dark-charcoal);
+  background-color: var(--bg-light);
+  transition: var(--transition);
+}
+
+.lang-btn:hover {
+  background-color: var(--primary-red-light);
+  border-color: var(--primary-red);
+  color: var(--primary-red);
+}
+
+/* Shopping Cart Badge */
+.cart-trigger {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--bg-light);
+  color: var(--dark-charcoal);
+  transition: var(--transition);
+}
+
+.cart-trigger:hover {
+  background-color: var(--primary-red-light);
+  color: var(--primary-red);
+}
+
+.cart-count {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  background-color: var(--primary-red);
+  color: var(--bg-white);
+  font-size: 11px;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(211, 16, 24, 0.4);
+}
+
+/* Responsive Navigation */
+@media (max-width: 768px) {
+  .navbar {
+    flex-wrap: wrap;
+    padding: 5px 0;
+  }
+  
+  .search-container {
+    order: 3;
+    max-width: 100%;
+    width: 100%;
+    margin-top: 10px;
+  }
+  
+  .brand-name {
+    display: none; /* Hide text logo on mobile */
+  }
+}

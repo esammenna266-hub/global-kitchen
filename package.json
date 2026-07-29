@@ -1,0 +1,19 @@
+{
+  "name": "global-kitchen",
+  "version": "1.0.0",
+  "description": "Global Kitchen - Premium Cookware, Tableware, & Home Organization E-Commerce Store",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y http-server -c-1 -p 3000",
+    "dev": "npx -y http-server -c-1 -p 3000"
+  },
+  "keywords": [
+    "kitchenware",
+    "cookware",
+    "tableware",
+    "ecommerce",
+    "bilingual"
+  ],
+  "author": "Global Kitchen Team",
+  "license": "MIT"
+}
