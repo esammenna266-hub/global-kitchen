@@ -127,12 +127,13 @@
             <section class="tab-content active" id="tab-overview">
                 <!-- Stats Grid -->
                 <div class="stats-grid">
-                    <div class="stat-card glass">
+                    <!-- Stat Card 1: Total Revenue -->
+                    <div class="stat-card glass clickable" onclick="switchTab('analytics')" title="اضغط لعرض تقرير الإحصائيات المالي الكامل">
                         <div class="stat-icon bg-gradient-purple">
                             <i data-lucide="dollar-sign"></i>
                         </div>
                         <div class="stat-details">
-                            <span class="stat-title">إجمالي المبيعات</span>
+                            <span class="stat-title">إجمالي المبيعات (عرض التقرير)</span>
                             <h3 class="stat-value" id="stat-total-revenue">$0.00</h3>
                             <span class="stat-trend positive">
                                 <i data-lucide="trending-up"></i> +14.2% مقارنة بالشهر الماضي
@@ -140,12 +141,13 @@
                         </div>
                     </div>
 
-                    <div class="stat-card glass">
+                    <!-- Stat Card 2: Total Orders -->
+                    <div class="stat-card glass clickable" onclick="switchTab('orders'); if(window.ordersManager){window.ordersManager.currentStatusFilter='all'; window.ordersManager.renderOrdersTable();}" title="اضغط لعرض قائمة كافة الطلبات">
                         <div class="stat-icon bg-gradient-blue">
                             <i data-lucide="shopping-bag"></i>
                         </div>
                         <div class="stat-details">
-                            <span class="stat-title">إجمالي الطلبات</span>
+                            <span class="stat-title">إجمالي الطلبات (عرض القائمة)</span>
                             <h3 class="stat-value" id="stat-total-orders">0</h3>
                             <span class="stat-trend positive">
                                 <i data-lucide="check-circle"></i> <span id="stat-completed-orders">0</span> مكتمل
@@ -153,25 +155,27 @@
                         </div>
                     </div>
 
-                    <div class="stat-card glass">
+                    <!-- Stat Card 3: Pending Orders -->
+                    <div class="stat-card glass clickable" onclick="switchTab('orders'); if(window.ordersManager){window.ordersManager.currentStatusFilter='pending'; window.ordersManager.renderOrdersTable();}" title="اضغط لمتابعة الطلبات المعلقة">
                         <div class="stat-icon bg-gradient-amber">
                             <i data-lucide="clock"></i>
                         </div>
                         <div class="stat-details">
-                            <span class="stat-title">طلبات معلقة / لم تسلم</span>
+                            <span class="stat-title">طلبات معلقة / لم تسلم (متابعة)</span>
                             <h3 class="stat-value" id="stat-pending-orders">0</h3>
                             <span class="stat-trend warning">
-                                <i data-lucide="alert-circle"></i> تحتاج متابعة فورية
+                                <i data-lucide="alert-circle"></i> تحتاج متابعة فورية 👈
                             </span>
                         </div>
                     </div>
 
-                    <div class="stat-card glass">
+                    <!-- Stat Card 4: Total Products -->
+                    <div class="stat-card glass clickable" onclick="switchTab('products')" title="اضغط لإدارة كتالوج المنتجات">
                         <div class="stat-icon bg-gradient-green">
                             <i data-lucide="boxes"></i>
                         </div>
                         <div class="stat-details">
-                            <span class="stat-title">المنتجات في الكتالوج</span>
+                            <span class="stat-title">المنتجات في الكتالوج (إدارة)</span>
                             <h3 class="stat-value" id="stat-total-products">0</h3>
                             <span class="stat-trend neutral">
                                 <i data-lucide="file-text"></i> مسحبة من الملفات والمتجر
