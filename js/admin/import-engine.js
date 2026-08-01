@@ -188,12 +188,28 @@ class SmartImportEngine {
         });
     }
 
-    // Extract all products from a single PDF page
+    // Extract all products from a single PDF page (with 30s page timeout)
     async extractPageProducts(pdf, pageNum) {
-        const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 2.0 }); // High-res render for image quality
+        const PAGE_TIMEOUT_MS = 30000; // 30 seconds max per page
+        try {
+            return await Promise.race([
+                this._extractPageProductsInner(pdf, pageNum),
+                new Promise((resolve) => setTimeout(() => {
+                    console.warn(`Page ${pageNum} timed out after ${PAGE_TIMEOUT_MS / 1000}s, skipping...`);
+                    resolve([]);
+                }, PAGE_TIMEOUT_MS))
+            ]);
+        } catch (err) {
+            console.error(`Error processing page ${pageNum}:`, err);
+            return [];
+        }
+    }
 
-        // Step 1: Render page to canvas for image cropping
+    async _extractPageProductsInner(pdf, pageNum) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2.0 });
+
+        // Step 1: Render page to canvas
         const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -204,8 +220,8 @@ class SmartImportEngine {
         const textContent = await page.getTextContent();
         const textItems = textContent.items.map(item => ({
             str: item.str,
-            x: item.transform[4] * 2, // Scale to match canvas
-            y: (viewport.height / 2) - (item.transform[5]) * 2 + (viewport.height / 2), // Flip Y
+            x: item.transform[4] * 2,
+            y: (viewport.height / 2) - (item.transform[5]) * 2 + (viewport.height / 2),
             width: item.width * 2,
             height: item.height * 2,
             fontSize: Math.abs(item.transform[0])
@@ -220,9 +236,12 @@ class SmartImportEngine {
         return products;
     }
 
-    // Extract embedded images from a PDF page using operator list
+    // Extract embedded images from a PDF page using operator list (with timeout protection)
     async extractImagesFromPage(page, canvas, viewport) {
         const images = [];
+        const MAX_IMG_PIXELS = 2000 * 2000; // Skip images larger than 4MP to avoid memory issues
+        const IMG_TIMEOUT_MS = 3000; // 3 second timeout per image
+
         try {
             const ops = await page.getOperatorList();
             const scale = 2.0;
@@ -232,71 +251,103 @@ class SmartImportEngine {
                 if (ops.fnArray[i] === 85 || ops.fnArray[i] === 82) {
                     const imgName = ops.argsArray[i][0];
                     try {
-                        const imgData = await new Promise((resolve, reject) => {
-                            page.objs.get(imgName, (data) => {
-                                if (data) resolve(data);
-                                else reject(new Error('No image data'));
-                            });
-                        });
+                        // Timeout-protected image fetch
+                        const imgData = await Promise.race([
+                            new Promise((resolve, reject) => {
+                                try {
+                                    page.objs.get(imgName, (data) => {
+                                        if (data) resolve(data);
+                                        else resolve(null); // Don't reject, just return null
+                                    });
+                                } catch (e) { resolve(null); }
+                            }),
+                            new Promise((resolve) => setTimeout(() => resolve(null), IMG_TIMEOUT_MS))
+                        ]);
 
-                        // Find the transform for this image by searching backwards for setTransform
+                        if (!imgData) continue; // Timed out or no data, skip
+
+                        // Find the transform for this image
                         let imgTransform = null;
-                        for (let j = i - 1; j >= Math.max(0, i - 10); j--) {
-                            if (ops.fnArray[j] === 12 || ops.fnArray[j] === 13) { // transform/setTransform
+                        for (let j = i - 1; j >= Math.max(0, i - 15); j--) {
+                            // OPS.transform = 12, OPS.setTransform = 13 (concat matrix)
+                            if (ops.fnArray[j] === 12 || ops.fnArray[j] === 13) {
                                 imgTransform = ops.argsArray[j];
                                 break;
                             }
                         }
 
-                        if (imgData && (imgData.width > 20 && imgData.height > 20)) {
-                            // Render image to a small canvas to get data URL
-                            const imgCanvas = document.createElement('canvas');
-                            imgCanvas.width = imgData.width;
-                            imgCanvas.height = imgData.height;
-                            const imgCtx = imgCanvas.getContext('2d');
+                        const imgW = imgData.width || 0;
+                        const imgH = imgData.height || 0;
 
-                            let imageDataObj;
-                            if (imgData.data) {
-                                // Raw pixel data
-                                const pixelData = new Uint8ClampedArray(imgData.width * imgData.height * 4);
-                                const srcData = imgData.data;
-                                const hasAlpha = imgData.data.length === imgData.width * imgData.height * 4;
-
-                                if (hasAlpha) {
-                                    pixelData.set(srcData);
-                                } else {
-                                    // RGB to RGBA
-                                    for (let p = 0, q = 0; p < srcData.length; p += 3, q += 4) {
-                                        pixelData[q] = srcData[p];
-                                        pixelData[q + 1] = srcData[p + 1];
-                                        pixelData[q + 2] = srcData[p + 2];
-                                        pixelData[q + 3] = 255;
-                                    }
-                                }
-                                imageDataObj = new ImageData(pixelData, imgData.width, imgData.height);
-                                imgCtx.putImageData(imageDataObj, 0, 0);
-                            } else if (imgData instanceof HTMLCanvasElement || imgData.src) {
-                                imgCtx.drawImage(imgData, 0, 0);
-                            }
-
-                            const dataUrl = imgCanvas.toDataURL('image/jpeg', 0.85);
-
-                            // Estimate position on page
-                            let yPos = 0;
-                            if (imgTransform && imgTransform.length >= 6) {
-                                yPos = viewport.height - (imgTransform[5] * scale);
-                            }
-
-                            images.push({
-                                dataUrl,
-                                width: imgData.width,
-                                height: imgData.height,
-                                y: yPos,
-                                name: imgName
-                            });
+                        // Skip tiny images (icons, dots) and huge images (full-page backgrounds)
+                        if (imgW < 30 || imgH < 30) continue;
+                        if (imgW * imgH > MAX_IMG_PIXELS) {
+                            console.warn(`Skipping oversized image ${imgName}: ${imgW}x${imgH}`);
+                            continue;
                         }
+
+                        // Render image to a small canvas to get data URL
+                        const imgCanvas = document.createElement('canvas');
+                        // Cap output size to 400px max dimension for performance
+                        const maxDim = 400;
+                        const ratio = Math.min(maxDim / imgW, maxDim / imgH, 1);
+                        imgCanvas.width = Math.round(imgW * ratio);
+                        imgCanvas.height = Math.round(imgH * ratio);
+                        const imgCtx = imgCanvas.getContext('2d');
+
+                        if (imgData.data) {
+                            // Raw pixel data - create full-size first then scale down
+                            const fullCanvas = document.createElement('canvas');
+                            fullCanvas.width = imgW;
+                            fullCanvas.height = imgH;
+                            const fullCtx = fullCanvas.getContext('2d');
+
+                            const pixelData = new Uint8ClampedArray(imgW * imgH * 4);
+                            const srcData = imgData.data;
+                            const expectedRGBA = imgW * imgH * 4;
+                            const expectedRGB = imgW * imgH * 3;
+
+                            if (srcData.length >= expectedRGBA) {
+                                pixelData.set(srcData.subarray(0, expectedRGBA));
+                            } else if (srcData.length >= expectedRGB) {
+                                for (let p = 0, q = 0; p < expectedRGB; p += 3, q += 4) {
+                                    pixelData[q] = srcData[p];
+                                    pixelData[q + 1] = srcData[p + 1];
+                                    pixelData[q + 2] = srcData[p + 2];
+                                    pixelData[q + 3] = 255;
+                                }
+                            } else {
+                                continue; // Unexpected data size, skip
+                            }
+
+                            const imageDataObj = new ImageData(pixelData, imgW, imgH);
+                            fullCtx.putImageData(imageDataObj, 0, 0);
+                            imgCtx.drawImage(fullCanvas, 0, 0, imgCanvas.width, imgCanvas.height);
+                        } else if (imgData instanceof HTMLCanvasElement) {
+                            imgCtx.drawImage(imgData, 0, 0, imgCanvas.width, imgCanvas.height);
+                        } else if (imgData.src) {
+                            imgCtx.drawImage(imgData, 0, 0, imgCanvas.width, imgCanvas.height);
+                        } else {
+                            continue; // Unknown format
+                        }
+
+                        const dataUrl = imgCanvas.toDataURL('image/jpeg', 0.80);
+
+                        // Estimate position on page
+                        let yPos = 0;
+                        if (imgTransform && imgTransform.length >= 6) {
+                            yPos = viewport.height - (imgTransform[5] * scale);
+                        }
+
+                        images.push({
+                            dataUrl,
+                            width: imgW,
+                            height: imgH,
+                            y: yPos,
+                            name: imgName
+                        });
                     } catch (imgErr) {
-                        // Skip failed images silently
+                        console.warn(`Skipping image ${imgName}:`, imgErr.message);
                     }
                 }
             }
