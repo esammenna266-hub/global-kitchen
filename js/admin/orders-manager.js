@@ -178,8 +178,10 @@ class OrdersManager {
             <div class="invoice-container" style="background:#ffffff; padding:24px; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-subtle); padding-bottom:14px; margin-bottom:16px;">
                     <div>
-                        <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-main);">فاتورة طلب رقم #${order.id}</h2>
-                        <small style="color:var(--text-secondary);">تاريخ الطلب: ${order.date}</small>
+                        <h2 style="font-size:1.3rem; font-weight:800; color:var(--text-main);">فاتورة طلب رسمية #${order.id}</h2>
+                        <div style="background:#eef2ff; color:#3730a3; padding:4px 10px; border-radius:6px; font-weight:700; font-size:0.85rem; margin-top:6px; border:1px solid #c7d2fe; display:inline-block;">
+                            📅 تاريخ ووقت إصدار الفاتورة: <strong>${order.date}</strong>
+                        </div>
                     </div>
                     <div>${this.getStatusBadgeHtml(order.status)}</div>
                 </div>

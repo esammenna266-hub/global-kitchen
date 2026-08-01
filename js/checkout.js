@@ -103,6 +103,12 @@ const CheckoutManager = {
 
     const orderId = "GK-LB-" + Math.floor(1000 + Math.random() * 9000).toString();
 
+    // Format Exact Creation Date & Time
+    const now = new Date();
+    const orderDateStr = now.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+    const orderTimeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', hour12: true });
+    const fullDateTimeStr = `${orderDateStr} - الساعة ${orderTimeStr}`;
+
     const newDashboardOrder = {
       id: orderId,
       customer: {
@@ -119,7 +125,7 @@ const CheckoutManager = {
       payment_method: 'الدفع عند الاستلام كاش فقط (COD)',
       status: 'pending',
       status_label: 'لم يتم التعليق / معلق',
-      date: new Date().toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
+      date: fullDateTimeStr
     };
 
     this.lastPlacedOrder = newDashboardOrder;
@@ -150,6 +156,7 @@ const CheckoutManager = {
           <h3 class="success-title" style="font-size: 22px; font-weight: 800; color: #1e293b; margin-bottom: 10px;">تم إرسال طلبك بنجاح!</h3>
           <p class="success-desc" style="color: #64748b; font-size: 15px; max-width: 480px; margin: 0 auto 20px; line-height: 1.6;">
             رقم الطلب: <strong style="color: #C41E3A;">#${orderId}</strong><br>
+            تاريخ وساعة الطلب: <strong>${fullDateTimeStr}</strong><br>
             الإجمالي النهائي: <strong style="color: #0f172a;">$${totals.grandTotal.toFixed(2)} USD</strong> (تشمل $4.00 رسوم شحن لبنان).<br>
             طريقة الدفع: <strong>الدفع عند الاستلام كاش فقط 💵</strong>
           </p>
@@ -193,19 +200,24 @@ const CheckoutManager = {
     container.innerHTML = `
       <div style="border: 2px solid #e2e8f0; border-radius: 12px; padding: 25px; background: #ffffff;">
         <!-- Invoice Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px;">
           <div>
             <h2 style="margin: 0; color: #C41E3A; font-size: 24px; font-weight: 900; display: flex; align-items: center; gap: 8px;">
               <i class="fa-solid fa-utensils"></i> المطبخ العالمي (Global Kitchen)
             </h2>
-            <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">فاتورة طلب رسمية - لبنان 🇱🇧</p>
+            <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">فاتورة بيع رسمية - لبنان 🇱🇧</p>
           </div>
           <div style="text-align: left;">
-            <span style="background: #fef2f2; color: #991b1b; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 20px; border: 1px solid #fecaca;">
+            <span style="background: #fef2f2; color: #991b1b; font-size: 13px; font-weight: 800; padding: 5px 12px; border-radius: 20px; border: 1px solid #fecaca; display: inline-block;">
               #${targetOrder.id}
             </span>
-            <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">${targetOrder.date}</div>
           </div>
+        </div>
+
+        <!-- Issue Date & Time Bar -->
+        <div style="background: #f1f5f9; padding: 10px 14px; border-radius: 8px; font-size: 13px; color: #1e293b; display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border: 1px solid #cbd5e1;">
+          <div>📅 <strong>تاريخ إصدار الفاتورة:</strong> ${targetOrder.date}</div>
+          <div style="color: #475569; font-size: 12px;">توقيت عمل الطلب بالموقع ⏱️</div>
         </div>
 
         <!-- Customer & Delivery Box -->
@@ -239,7 +251,7 @@ const CheckoutManager = {
             <span>$${targetOrder.subtotal.toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 13px; color: #4f46e5; font-weight: 700; margin-bottom: 10px;">
-            <span>رسوم الشحن (لبنان):</span>
+            <span>رسوم الشحن (لكافة مناطق لبنان):</span>
             <span>$${targetOrder.shipping.toFixed(2)}</span>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 16px; color: #0f172a; font-weight: 900; border-top: 2px dashed #cbd5e1; padding-top: 10px;">
@@ -255,7 +267,6 @@ const CheckoutManager = {
       </div>
     `;
 
-    // Open Modal
     modal.classList.add('active');
   },
 
