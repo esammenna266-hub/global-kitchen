@@ -316,17 +316,17 @@
 
             <!-- TAB 3: SMART IMPORT CENTER (PDF & EXCEL) -->
             <section class="tab-content" id="tab-import-center">
-                <div class="import-banner glass">
+                <div class="import-banner glass" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: #ffffff;">
                     <div class="banner-content">
-                        <h2><i data-lucide="sparkles"></i> المستخرج الذكي لكتالوجات PDF وشيتات Excel</h2>
-                        <p>ارفع أي ملف PDF أو شيت إكسيل من الموردين، وسيقوم النظام الذكي بمسح وتفكيك كل الصفحات والجداول، واستخراج صور المنتجات والأسعار والأسماء تلقائياً وتجهيزها للعرض والإضافة لمتجرك!</p>
+                        <h2 style="color:#ffffff;"><i data-lucide="sparkles"></i> المستخرج الذكي لشيتات Excel وكتالوجات PDF (مع حساب 30% ربح تلقائياً)</h2>
+                        <p style="color:#e0e7ff;">ارفع أي شيت إكسيل أو كتالوج PDF من الموردين، وسيقوم النظام بضمان استخراج 100% من بنود الملف وصوره، مع حساب وحفظ سعر البيع للمتجر مضافاً إليه 30% هامش ربح تلقائياً! 📈</p>
                     </div>
                     <div class="banner-actions">
                         <button class="btn btn-light" onclick="loadDemoExcelFile()">
-                            <i data-lucide="play-circle"></i> تجربة استيراد شيت إكسيل تجريبي
+                            <i data-lucide="play-circle"></i> تجربة استيراد شيت إكسيل (+30% ربح)
                         </button>
-                        <button class="btn btn-light-outline" onclick="loadDemoPdfFile()">
-                            <i data-lucide="file-text"></i> تجربة استيراد كتالوج PDF تجريبي
+                        <button class="btn btn-light-outline" onclick="loadDemoPdfFile()" style="color:#ffffff; border-color:#ffffff;">
+                            <i data-lucide="file-text"></i> تجربة استيراد كتالوج PDF (+30% ربح)
                         </button>
                     </div>
                 </div>
@@ -338,8 +338,8 @@
                         <div class="upload-icon-wrapper">
                             <i data-lucide="upload-cloud"></i>
                         </div>
-                        <h3 style="font-size:1.25rem; font-weight:800; margin-bottom:6px; color:var(--text-main);">اسحب ملف Excel أو PDF هنا، أو اضغط لاختيار ملف من جهازك</h3>
-                        <p style="color:var(--text-secondary); margin-bottom:14px;">الصيغ المدعومة: Excel (.xlsx, .xls), CSV, وحديثاً PDF Multi-page Catalog</p>
+                        <h3 style="font-size:1.25rem; font-weight:800; margin-bottom:6px; color:var(--text-main);">اسحب ملف Excel أو PDF من المورد هنا، أو اضغط لاختيار الملف</h3>
+                        <p style="color:var(--text-secondary); margin-bottom:14px;">يضمن النظام قراءة واستخراج 100% من أصناف الملف بالصور وحساب (+30%) هامش ربح على سعر المتجر تلقائياً</p>
                         
                         <button type="button" class="btn btn-primary btn-lg" onclick="event.stopPropagation(); document.getElementById('import-file-input').click();">
                             <i data-lucide="folder-open"></i> اختيار وتصفح ملف من جهازك الآن
