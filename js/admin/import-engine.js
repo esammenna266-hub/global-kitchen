@@ -462,22 +462,8 @@ class SmartImportEngine {
 
             if (title.length < 3) return; // Skip empty/trivial blocks
 
-            // Find matching image by Y position proximity
+            // Image will be assigned after all products are built (sequential matching)
             let productImage = '';
-            const blockMidY = (currentBlock.yMin + currentBlock.yMax) / 2;
-            let bestImgDist = Infinity;
-            for (const img of images) {
-                const dist = Math.abs(img.y - blockMidY);
-                if (dist < bestImgDist && dist < 150) {
-                    bestImgDist = dist;
-                    productImage = img.dataUrl;
-                    img._used = true;
-                }
-            }
-
-            if (!productImage) {
-                productImage = this.getSampleImageForCategory(title, products.length);
-            }
 
             if (costPrice === 0) costPrice = 5.00; // Fallback
 
@@ -525,6 +511,25 @@ class SmartImportEngine {
         }
         // Flush remaining
         flushProduct();
+
+        // ═══════════════════════════════════════════════════
+        // SEQUENTIAL IMAGE-TO-PRODUCT MATCHING
+        // Filter out non-product images (very small decorations, logos)
+        // Then assign images to products in order (top to bottom)
+        // ═══════════════════════════════════════════════════
+        const productImages = images.filter(img => {
+            // Keep images that are likely product photos (not tiny icons/lines)
+            return img.width >= 40 && img.height >= 40;
+        });
+
+        // Assign images to products sequentially
+        for (let p = 0; p < products.length; p++) {
+            if (p < productImages.length) {
+                products[p].image = productImages[p].dataUrl;
+            } else {
+                products[p].image = this.getSampleImageForCategory(products[p].title, p);
+            }
+        }
 
         return products;
     }
