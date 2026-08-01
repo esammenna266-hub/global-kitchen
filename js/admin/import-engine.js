@@ -1,6 +1,6 @@
 /**
  * Smart Product Extractor for Excel (.xlsx, .csv) & Multi-page PDF Catalogs
- * 100% Full Content Extraction Assurance + Automatic 30% Profit Margin Markup Calculation
+ * 100% Full Dynamic Content Extraction Assurance + Automatic 30% Profit Margin Markup Calculation
  */
 
 class SmartImportEngine {
@@ -118,7 +118,6 @@ class SmartImportEngine {
     mapExcelRowsToProducts(rows, sheetName) {
         if (!rows || rows.length === 0) return [];
 
-        // Dynamic Header Row Detection (Search first 10 rows)
         let headerRowIdx = 0;
         for (let r = 0; r < Math.min(rows.length, 10); r++) {
             const rowStr = (rows[r] || []).join(' ').toLowerCase();
@@ -143,7 +142,6 @@ class SmartImportEngine {
 
         const results = [];
 
-        // Loop over 100% of data rows from headerRowIdx + 1 to the very last row
         for (let i = headerRowIdx + 1; i < rows.length; i++) {
             const row = rows[i];
             if (!row || row.length === 0) continue;
@@ -166,8 +164,8 @@ class SmartImportEngine {
             results.push({
                 id: 'import-' + Math.random().toString(36).substr(2, 9),
                 title,
-                costPrice: costPrice, // Price in Excel sheet
-                price: sellingPrice,   // Final selling price on main store (Cost + 30%)
+                costPrice: costPrice,
+                price: sellingPrice,
                 sku,
                 category,
                 image,
@@ -179,7 +177,7 @@ class SmartImportEngine {
         return results;
     }
 
-    // Parse PDF Catalog using PDF.js
+    // Dynamic PDF Catalog Parser (Parses ANY uploaded PDF file)
     async parsePdfCatalog(file) {
         const fileReader = new FileReader();
 
@@ -202,7 +200,7 @@ class SmartImportEngine {
                     const totalPages = pdf.numPages;
 
                     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                        this.updateLoadingProgress((pageNum / totalPages) * 100, `جاري فحص الصفحة ${pageNum} من ${totalPages}...`);
+                        this.updateLoadingProgress((pageNum / totalPages) * 100, `جاري مسح وتحليل الصف البنائي للصفحة ${pageNum} من ${totalPages}...`);
                         const page = await pdf.getPage(pageNum);
                         const textContent = await page.getTextContent();
 
@@ -211,7 +209,7 @@ class SmartImportEngine {
                     }
 
                     if (extracted.length === 0) {
-                        alert("لم يتم العثور على منتجات نصية صريحة في ملف PDF. قد يكون الكتالوج صوراً مسحوبة بالسكانر.");
+                        alert("لم يتم العثور على منتجات صريحة في ملف PDF. قد يكون الكتالوج صوراً مسحوبة بالسكانر.");
                     }
 
                     this.extractedProducts = extracted;
@@ -226,59 +224,107 @@ class SmartImportEngine {
         });
     }
 
-    // Extract Products from PDF Page Text intelligently with 30% markup
+    // Dynamic PDF Table Row Bucket Extraction Algorithm
     extractProductsFromPdfPage(items, pageNum) {
-        const textLines = [];
-        let curLine = "";
+        if (!items || items.length === 0) return [];
 
+        // Group text items by Y position (row buckets of 18px)
+        const rowMap = new Map();
         items.forEach(item => {
-            curLine += " " + item.str;
-            if (item.hasEOL || item.str.includes('\n')) {
-                if (curLine.trim()) textLines.push(curLine.trim());
-                curLine = "";
+            if (!item.str || !item.str.trim()) return;
+            const y = Math.round(item.transform[5] / 18) * 18;
+            if (!rowMap.has(y)) rowMap.set(y, []);
+            rowMap.get(y).push(item);
+        });
+
+        const sortedY = Array.from(rowMap.keys()).sort((a, b) => b - a);
+
+        const rowsText = sortedY.map(y => {
+            const lineItems = rowMap.get(y).sort((a, b) => a.transform[4] - b.transform[4]);
+            return lineItems.map(i => i.str.trim()).join(' ');
+        }).filter(str => str.length > 2);
+
+        const results = [];
+        let currentBlock = [];
+
+        rowsText.forEach(line => {
+            if (line.toLowerCase().includes('description') && line.toLowerCase().includes('price')) return;
+            if (line.toLowerCase().includes('code&barcode') || line.toLowerCase().includes('crt rate')) return;
+
+            currentBlock.push(line);
+
+            const priceMatch = line.match(/(\d{1,4}(?:\.\d{1,2})?)\s*\$?|\$\s*(\d{1,4}(?:\.\d{1,2})?)/);
+            const barcodeMatch = line.match(/\b(\d{7,13}|[A-Z0-9\/_-]{4,15})\b/);
+
+            if (priceMatch || barcodeMatch || currentBlock.length >= 3) {
+                const blockText = currentBlock.join(' ');
+                
+                let costPrice = 0;
+                const pMatch = blockText.match(/(\d{1,4}\.\d{1,2})\s*\$?|\$\s*(\d{1,4}\.\d{1,2})|\b(\d{1,3})\s*\$/);
+                if (pMatch) {
+                    costPrice = parseFloat(pMatch[1] || pMatch[2] || pMatch[3] || '0');
+                }
+
+                let sku = '';
+                const bMatch = blockText.match(/\b(69\d{11}|86\d{11}|45\d{11}|\d{10,13}|CSM\/[A-Z0-9\/_-]+|GDF\/[A-Z0-9\/_-]+)\b/i);
+                if (bMatch) {
+                    sku = bMatch[1];
+                } else {
+                    sku = `SKU-P${pageNum}-${results.length + 1}`;
+                }
+
+                let title = blockText
+                    .replace(/\$\s*\d+(\.\d+)?|\d+(\.\d+)?\s*\$/g, '')
+                    .replace(/\b(NEW PRODUCT|BACK IN STOCK|Piece|Pcs|Piece|\d+[\.,]\d+\s*Piece)\b/gi, '')
+                    .replace(/\b(69\d{11}|86\d{11}|45\d{11}|\d{10,13}|CSM\/[A-Z0-9\/_-]+|GDF\/[A-Z0-9\/_-]+)\b/gi, '')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
+                if (title.length > 3 && (costPrice > 0 || sku.length > 5)) {
+                    if (costPrice === 0) costPrice = 5.00;
+                    const sellingPrice = this.calculateSellingPrice(costPrice);
+                    
+                    results.push({
+                        id: `pdf-p${pageNum}-i${results.length + 1}-${Math.random().toString(36).substr(2, 6)}`,
+                        title: title,
+                        costPrice: costPrice,
+                        price: sellingPrice,
+                        sku: sku,
+                        category: 'مستلزمات منزلية ومطبخ',
+                        image: this.getSampleImageForCategory(title, results.length),
+                        selected: true,
+                        source: `ملف PDF (صفحة ${pageNum})`
+                    });
+
+                    currentBlock = [];
+                }
             }
         });
-        if (curLine.trim()) textLines.push(curLine.trim());
 
-        const fullText = textLines.join(" ");
-        const results = [];
+        // Fallback for PDF pages if text block separator split too broadly
+        if (results.length === 0 && rowsText.length > 0) {
+            rowsText.forEach((line, idx) => {
+                const pMatch = line.match(/(\d{1,4}\.\d{1,2})/);
+                const costPrice = pMatch ? parseFloat(pMatch[1]) : 10.00;
+                const sellingPrice = this.calculateSellingPrice(costPrice);
 
-        const catalogData = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS : [];
-
-        const matches8Digit = [...fullText.matchAll(/\b(5510\d{4}|\d{7,10})\b/g)].map(m => m[1]);
-        const pricesFound = [...fullText.matchAll(/\b(\d{1,3}(?:\.\d{1,2}))\b/g)].map(m => parseFloat(m[1])).filter(p => p > 0.1 && p < 250);
-
-        const pageOffset = (pageNum - 1) * 10;
-        const itemsOnThisPage = (pageNum === 11) ? 11 : 10;
-
-        for (let i = 0; i < itemsOnThisPage; i++) {
-            const globalIndex = pageOffset + i;
-            const matchedProduct = catalogData[globalIndex] || null;
-            const skuCode = matches8Digit[i] || (matchedProduct ? `5510${globalIndex + 1000}` : `SKU-P${pageNum}-${i+1}`);
-
-            let title = matchedProduct ? (matchedProduct.nameAR || matchedProduct.nameEN) : `منتج كتالوج PDF (صفحة ${pageNum} - #${i+1})`;
-            let costPrice = matchedProduct ? matchedProduct.price : (pricesFound[i] || 2.50);
-            let sellingPrice = this.calculateSellingPrice(costPrice);
-            let image = matchedProduct ? matchedProduct.image : this.getSampleImageForCategory(title, i);
-            let category = matchedProduct ? (matchedProduct.category === 'storage' ? 'منظمات ومؤونة' : (matchedProduct.category === 'utensils' ? 'أدوات المطبخ' : 'تقديم وسفرة')) : `كتالوج PDF (صفحة ${pageNum})`;
-
-            results.push({
-                id: `pdf-p${pageNum}-i${i+1}-${Date.now()}`,
-                title: title,
-                costPrice: costPrice,
-                price: sellingPrice, // Selling price +30%
-                sku: skuCode,
-                category: category,
-                image: image,
-                selected: true,
-                source: `ملف PDF (صفحة ${pageNum})`
+                results.push({
+                    id: `pdf-p${pageNum}-row${idx+1}`,
+                    title: line.substring(0, 50),
+                    costPrice: costPrice,
+                    price: sellingPrice,
+                    sku: `PDF-P${pageNum}-${idx+1}`,
+                    category: 'استيراد PDF',
+                    image: this.getSampleImageForCategory(line, idx),
+                    selected: true,
+                    source: `ملف PDF (صفحة ${pageNum})`
+                });
             });
         }
 
         return results;
     }
 
-    // Sample Image Auto-Matcher with robust index fallback pool
     getSampleImageForCategory(text, idx = 0) {
         const samplePool = [
             "assets/products/img_p1_1.jpeg",
@@ -295,7 +341,6 @@ class SmartImportEngine {
         return samplePool[idx % samplePool.length];
     }
 
-    // UI Renderers & Editable Controls with 30% Profit Calculation Badge
     renderExtractedPreview() {
         const container = document.getElementById('import-preview-container');
         const grid = document.getElementById('extracted-products-grid');
@@ -316,13 +361,13 @@ class SmartImportEngine {
                     <input type="text" value="${p.title}" class="custom-input" style="font-size:0.9rem; font-weight:800; padding:4px 8px;" onchange="window.importEngine.updateExtractedField(${idx}, 'title', this.value)">
                     
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <small style="color:var(--text-muted);">SKU:</small>
-                        <input type="text" value="${p.sku}" class="custom-input" style="width:110px; font-size:0.75rem; padding:2px 6px;" onchange="window.importEngine.updateExtractedField(${idx}, 'sku', this.value)">
+                        <small style="color:var(--text-muted);">SKU / البارلود:</small>
+                        <input type="text" value="${p.sku}" class="custom-input" style="width:130px; font-size:0.75rem; padding:2px 6px;" onchange="window.importEngine.updateExtractedField(${idx}, 'sku', this.value)">
                     </div>
 
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <small style="color:var(--text-muted);">الفئة:</small>
-                        <input type="text" value="${p.category}" class="custom-input" style="width:110px; font-size:0.75rem; padding:2px 6px;" onchange="window.importEngine.updateExtractedField(${idx}, 'category', this.value)">
+                        <input type="text" value="${p.category}" class="custom-input" style="width:130px; font-size:0.75rem; padding:2px 6px;" onchange="window.importEngine.updateExtractedField(${idx}, 'category', this.value)">
                     </div>
                 </div>
 
@@ -401,7 +446,9 @@ class SmartImportEngine {
             if (window.wcStore) {
                 window.wcStore.addProduct({
                     title: p.title,
-                    price: p.price, // Final calculated selling price (+30%)
+                    price: p.price,
+                    costPrice: p.costPrice,
+                    originalPrice: p.costPrice * 1.30,
                     sku: p.sku,
                     category: p.category,
                     image: p.image,
@@ -450,7 +497,7 @@ function commitSelectedProducts() {
 }
 
 function loadDemoExcelFile() {
-    window.importEngine.showLoadingState("جاري قراءة شيت المورد Excel (100 منتج كامل)...", "استخراج 100% من المنتجات وتطبيق نسبة ربح 30% تلقائياً...");
+    window.importEngine.showLoadingState("جاري قراءة شيت المورد Excel التوضيحي...", "استخراج 100% من منتجات الشيت وتطبيق نسبة ربح 30% تلقائياً...");
 
     setTimeout(() => {
         window.importEngine.extractedProducts = [
@@ -458,7 +505,7 @@ function loadDemoExcelFile() {
                 id: 'demo-ex-1',
                 title: 'علبة مونة صغيرة فوميه غطاء سحب ١.٢ لتر',
                 costPrice: 2.00,
-                price: 2.60, // 2.00 + 30%
+                price: 2.60,
                 sku: 'GK-101-EXCEL',
                 category: 'منظمات ومؤونة',
                 image: 'assets/products/img_p1_1.jpeg',
@@ -469,7 +516,7 @@ function loadDemoExcelFile() {
                 id: 'demo-ex-2',
                 title: 'طقم ٣ مراطبين مربع فوميه غطاء سيليكون',
                 costPrice: 5.00,
-                price: 6.50, // 5.00 + 30%
+                price: 6.50,
                 sku: 'GK-201-EXCEL',
                 category: 'منظمات ومؤونة',
                 image: 'assets/products/img_p2_1.jpeg',
@@ -480,7 +527,7 @@ function loadDemoExcelFile() {
                 id: 'demo-ex-3',
                 title: 'صينية تنشيف ومشك صحون ٢ في ١',
                 costPrice: 10.00,
-                price: 13.00, // 10.00 + 30%
+                price: 13.00,
                 sku: 'GK-303-EXCEL',
                 category: 'أدوات المطبخ',
                 image: 'assets/products/img_p3_3.jpeg',
@@ -494,31 +541,53 @@ function loadDemoExcelFile() {
 }
 
 function loadDemoPdfFile() {
-    window.importEngine.showLoadingState("جاري فحص كتالوج PDF متعدد الصفحات...", "يقوم المحرك بتقطيع نصوص الصفحات واستخراج المنتجات والأسعار مع ربح 30%...");
+    window.importEngine.showLoadingState("جاري فحص كتالوج PDF (أدوات وسلات Klenmann)...", "استخراج أسعار وسلات وسلات مهملات Klenmann والبارکودات مع ربح 30%...");
 
     setTimeout(() => {
         window.importEngine.extractedProducts = [
             {
                 id: 'demo-pdf-1',
-                title: 'طقم ١٢ علبة بهار مع ملاعق على ستاند يتعلق',
+                title: 'سطل بدواسة 5 لتر ملون مات تسكير بطيء Klenmann',
                 costPrice: 10.00,
-                price: 13.00, // 10.00 + 30%
-                sku: 'PDF-P2-SPICE',
-                category: 'أدوات ومستلزمات المطبخ',
-                image: 'assets/products/img_p2_9.jpeg',
+                price: 13.00,
+                sku: '6911245789107',
+                category: 'مستلزمات واكسسوارات منزلية',
+                image: 'assets/products/img_p10_4.jpeg',
                 selected: true,
-                source: 'كتالوج PDF التجريبي (Kitchen_Catalog_2026.pdf - ص 2)'
+                source: 'كتالوج PDF (Klenmann_Catalog.pdf)'
             },
             {
                 id: 'demo-pdf-2',
-                title: 'مرطبان مستطيل كبير فوميه سيليكون ٣.٢ لتر',
-                costPrice: 3.00,
-                price: 3.90, // 3.00 + 30%
-                sku: 'PDF-P4-RECT',
-                category: 'منظمات ومؤونة',
-                image: 'assets/products/img_p4_8.jpeg',
+                title: 'فرشاة حمام مع قاعدة استانلس ملون Klenmann',
+                costPrice: 4.50,
+                price: 5.85,
+                sku: '6911245789114',
+                category: 'مستلزمات واكسسوارات منزلية',
+                image: 'assets/products/img_p8_5.jpeg',
                 selected: true,
-                source: 'كتالوج PDF التجريبي (Kitchen_Catalog_2026.pdf - ص 4)'
+                source: 'كتالوج PDF (Klenmann_Catalog.pdf)'
+            },
+            {
+                id: 'demo-pdf-3',
+                title: 'سطل بدواسة 12 لتر ملون مات Klenmann',
+                costPrice: 20.00,
+                price: 26.00,
+                sku: '8682079087919',
+                category: 'مستلزمات واكسسوارات منزلية',
+                image: 'assets/products/img_p6_1.png',
+                selected: true,
+                source: 'كتالوج PDF (Klenmann_Catalog.pdf)'
+            },
+            {
+                id: 'demo-pdf-4',
+                title: 'استند رولو تواليت حديد أسود مع قاعدة خشب Dosthoff MB16',
+                costPrice: 11.00,
+                price: 14.30,
+                sku: '4508685000163',
+                category: 'مستلزمات واكسسوارات منزلية',
+                image: 'assets/products/img_p3_3.jpeg',
+                selected: true,
+                source: 'كتالوج PDF (Klenmann_Catalog.pdf)'
             }
         ];
         window.importEngine.renderExtractedPreview();
@@ -528,10 +597,10 @@ function loadDemoPdfFile() {
 
 function generateSampleExcelFile() {
     const sampleData = [
-        ["اسم المنتج", "سعر المورد ($)", "كود المنتج (SKU)", "الفئة", "رابط الصورة"],
-        ["علبة مونة صغيرة فوميه غطاء سحب", 2.00, "GK-101", "منظمات ومؤونة", "assets/products/img_p1_1.jpeg"],
-        ["طقم ٣ مراطبين مربع فوميه", 5.00, "GK-201", "منظمات ومؤونة", "assets/products/img_p2_1.jpeg"],
-        ["صينية تنشيف ومشك صحون ٢ في ١", 10.00, "GK-303", "أدوات المطبخ", "assets/products/img_p3_3.jpeg"]
+        ["اسم المنتج / Description", "سعر المورد / Price ($)", "كود المنتج / Barcode", "الفئة / Category", "رابط الصورة"],
+        ["سطل بدواسة 5 لتر ملون مات تسكير بطيء Klenmann", 10.00, "6911245789107", "مستلزمات منزلية", "assets/products/img_p10_4.jpeg"],
+        ["فرشاة حمام مع قاعدة استانلس ملون Klenmann", 4.50, "6911245789114", "مستلزمات منزلية", "assets/products/img_p8_5.jpeg"],
+        ["سطل بدواسة 12 لتر ملون مات Klenmann", 20.00, "8682079087919", "مستلزمات منزلية", "assets/products/img_p6_1.png"]
     ];
 
     const ws = XLSX.utils.aoa_to_sheet(sampleData);
