@@ -1,5 +1,5 @@
 /**
- * Products Manager Module - USD & Advanced Edit Controls for Integrated Admin
+ * Products Manager Module - USD & Advanced Edit Controls with 30% Profit Margin & Flash Sale Detection
  */
 
 class ProductsManager {
@@ -34,7 +34,6 @@ class ProductsManager {
 
         let products = window.wcStore ? window.wcStore.getProducts() : [];
 
-        // Update categories dropdown dynamically
         if (catFilter) {
             const currentSelected = catFilter.value;
             const categories = Array.from(new Set(products.map(p => p.category || 'عام')));
@@ -42,7 +41,6 @@ class ProductsManager {
                 categories.map(c => `<option value="${c}" ${c === currentSelected ? 'selected' : ''}>${c}</option>`).join('');
         }
 
-        // Apply Search Filter
         const query = (document.getElementById('products-search-input')?.value || '').toLowerCase();
         if (query) {
             products = products.filter(p => 
@@ -52,13 +50,11 @@ class ProductsManager {
             );
         }
 
-        // Apply Category Filter
         const selectedCat = catFilter?.value;
         if (selectedCat && selectedCat !== 'all') {
             products = products.filter(p => p.category === selectedCat);
         }
 
-        // Apply Stock Filter
         const stockState = document.getElementById('products-stock-filter')?.value;
         if (stockState && stockState !== 'all') {
             if (stockState === 'instock') products = products.filter(p => p.stock > 5);
@@ -66,7 +62,6 @@ class ProductsManager {
             else if (stockState === 'outofstock') products = products.filter(p => p.stock === 0);
         }
 
-        // Update Total Badges
         const sidebarCount = document.getElementById('sidebar-product-count');
         const statProductCount = document.getElementById('stat-total-products');
         if (sidebarCount) sidebarCount.textContent = products.length;
@@ -90,21 +85,32 @@ class ProductsManager {
             if (p.stock === 0) stockBadge = `<span class="badge badge-danger">نفد من المخزون</span>`;
             else if (p.stock <= 5) stockBadge = `<span class="badge badge-warning">مخزون منخفض (${p.stock})</span>`;
 
+            const stdPrice30 = p.costPrice ? (p.costPrice * 1.30) : (p.regular_price || p.price);
+            const isDiscountedBelow30 = p.price < (stdPrice30 - 0.05);
+
+            let flashBadge = '';
+            if (isDiscountedBelow30 || p.isSale || p.isFlashSale) {
+                flashBadge = `<span class="badge badge-danger" style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-size:0.7rem;">🔥 Flash Sale</span>`;
+            }
+
             return `
                 <tr>
                     <td>
                         <img src="${p.image}" class="product-img-thumb" alt="${p.title}" onerror="this.src='assets/products/img_p1_1.jpeg'">
                     </td>
                     <td>
-                        <strong style="display:block; font-size:0.95rem; color:var(--text-main);">${p.title}</strong>
+                        <strong style="display:block; font-size:0.95rem; color:var(--text-main);">${p.title} ${flashBadge}</strong>
                         <small style="color:var(--text-secondary);">${p.spec ? 'السعة: ' + p.spec : ''}</small>
                     </td>
                     <td><code>${p.sku}</code></td>
                     <td><span class="badge badge-primary">${p.category || 'عام'}</span></td>
                     <td>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span style="color:var(--success); font-weight:800; font-size:1.05rem;">$</span>
-                            <input type="number" step="0.01" value="${Number(p.price).toFixed(2)}" class="custom-input" style="width:85px; padding:4px 8px; font-weight:800; color:var(--success-text);" onchange="window.productsManager.quickUpdatePrice('${p.id}', this.value)">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <div style="display:flex; align-items:center; gap:4px;">
+                                <span style="color:var(--success); font-weight:800; font-size:1.05rem;">$</span>
+                                <input type="number" step="0.01" value="${Number(p.price).toFixed(2)}" class="custom-input" style="width:85px; padding:4px 8px; font-weight:800; color:var(--success-text);" onchange="window.productsManager.quickUpdatePrice('${p.id}', this.value)">
+                            </div>
+                            ${isDiscountedBelow30 ? `<small style="font-size:0.7rem; color:#b91c1c; font-weight:700;">أقل من 30% ربح (عرض محدود)</small>` : `<small style="font-size:0.7rem; color:#047857;">شامل +30% ربح</small>`}
                         </div>
                     </td>
                     <td>
@@ -132,7 +138,20 @@ class ProductsManager {
     }
 
     quickUpdatePrice(productId, newPrice) {
-        if (window.wcStore) window.wcStore.updateProduct(productId, { price: parseFloat(newPrice) || 0 });
+        const val = parseFloat(newPrice) || 0;
+        const products = window.wcStore ? window.wcStore.getProducts() : [];
+        const p = products.find(item => item.id === productId);
+        if (p) {
+            const std30 = p.costPrice ? (p.costPrice * 1.30) : (p.regular_price || val);
+            const isFlash = val < (std30 - 0.05);
+            window.wcStore.updateProduct(productId, {
+                price: val,
+                originalPrice: std30,
+                isSale: isFlash,
+                isFlashSale: isFlash
+            });
+        }
+        this.renderTable();
         if (window.analyticsManager) window.analyticsManager.updateMetrics();
     }
 
@@ -142,12 +161,12 @@ class ProductsManager {
     }
 
     openAddModal() {
-        document.getElementById('product-modal-title').textContent = "إضافة منتج جديد لمتجر جلوبال كيتشن";
+        document.getElementById('product-modal-title').textContent = "إضافة منتج جديد لمتجر جلوبال كيتشن (+30% ربح تلقائي)";
         document.getElementById('pm-product-id').value = "";
         document.getElementById('pm-title').value = "";
         document.getElementById('pm-sku').value = "GK-" + Math.floor(1000 + Math.random() * 9000);
-        document.getElementById('pm-price').value = "2.50";
-        document.getElementById('pm-regular-price').value = "3.00";
+        document.getElementById('pm-price').value = "3.25"; // 2.50 * 1.30
+        document.getElementById('pm-regular-price').value = "3.25";
         document.getElementById('pm-category').value = "منظمات ومؤونة";
         document.getElementById('pm-stock').value = "15";
         document.getElementById('pm-stock-status').value = "instock";
@@ -169,7 +188,7 @@ class ProductsManager {
         document.getElementById('pm-title').value = p.title;
         document.getElementById('pm-sku').value = p.sku;
         document.getElementById('pm-price').value = p.price;
-        document.getElementById('pm-regular-price').value = p.regular_price || p.price;
+        document.getElementById('pm-regular-price').value = p.regular_price || p.originalPrice || (p.price * 1.30);
         document.getElementById('pm-category').value = p.category || 'عام';
         document.getElementById('pm-stock').value = p.stock;
         document.getElementById('pm-stock-status').value = p.stock === 0 ? 'outofstock' : (p.stock <= 5 ? 'lowstock' : 'instock');
@@ -187,11 +206,19 @@ class ProductsManager {
 
     handleSaveProduct() {
         const id = document.getElementById('pm-product-id').value;
+        const price = parseFloat(document.getElementById('pm-price').value) || 0;
+        const regPrice = parseFloat(document.getElementById('pm-regular-price').value) || (price * 1.30);
+
+        const isFlash = price < regPrice;
+
         const data = {
             title: document.getElementById('pm-title').value,
             sku: document.getElementById('pm-sku').value,
-            price: parseFloat(document.getElementById('pm-price').value),
-            regular_price: parseFloat(document.getElementById('pm-regular-price').value),
+            price: price,
+            regular_price: regPrice,
+            originalPrice: regPrice,
+            isSale: isFlash,
+            isFlashSale: isFlash,
             category: document.getElementById('pm-category').value,
             stock: parseInt(document.getElementById('pm-stock').value),
             spec: document.getElementById('pm-spec').value,
