@@ -1,25 +1,16 @@
 /* ==========================================================================
-   CHECKOUT MANAGER & FORMS VALIDATOR (Vanilla JS Module)
+   CHECKOUT MANAGER & FORMS VALIDATOR (Cash On Delivery Only + $4 Shipping Lebanon)
    ========================================================================== */
 
 const CheckoutManager = {
-  activePaymentMethod: 'card',
+  activePaymentMethod: 'cod', // COD Only
 
   init() {
     this.bindEvents();
   },
 
   bindEvents() {
-    // Bind payment card selection clicks
-    const paymentCards = document.querySelectorAll('.payment-card');
-    paymentCards.forEach(card => {
-      card.addEventListener('click', (e) => {
-        const method = card.getAttribute('data-method');
-        this.setPaymentMethod(method);
-      });
-    });
-
-    // Bind Place Order button submission
+    // Form submission
     const form = document.getElementById('checkout-billing-form');
     if (form) {
       form.addEventListener('submit', (e) => {
@@ -27,22 +18,6 @@ const CheckoutManager = {
         this.submitOrder();
       });
     }
-  },
-
-  // Highlight active payment option card
-  setPaymentMethod(method) {
-    this.activePaymentMethod = method;
-    const cards = document.querySelectorAll('.payment-card');
-    cards.forEach(card => {
-      card.classList.remove('active');
-      const radio = card.querySelector('.payment-radio');
-      if (radio) radio.checked = false;
-
-      if (card.getAttribute('data-method') === method) {
-        card.classList.add('active');
-        if (radio) radio.checked = true;
-      }
-    });
   },
 
   // Open Checkout Modal dialog
@@ -74,7 +49,7 @@ const CheckoutManager = {
     if (modal) modal.classList.remove('active');
   },
 
-  // Renders small summary table of cart items inside the checkout modal
+  // Renders summary table of cart items & shipping ($4.00) inside checkout modal
   populateOrderSummary() {
     const container = document.getElementById('checkout-summary-items');
     if (!container) return;
@@ -93,20 +68,23 @@ const CheckoutManager = {
     });
     container.innerHTML = summaryHTML;
 
-    // Totals calculations
+    // Totals calculations ($4.00 flat rate shipping for Lebanon)
     const totals = window.CartManager.getTotals();
     const chkSubtotal = document.getElementById('chk-subtotal-val');
     if (chkSubtotal) chkSubtotal.textContent = `$${totals.subtotal.toFixed(2)}`;
 
+    const chkShipping = document.getElementById('chk-shipping-val');
+    if (chkShipping) chkShipping.textContent = `$${totals.shipping.toFixed(2)}`;
+
     const chkTotal = document.getElementById('chk-grand-val');
-    if (chkTotal) chkTotal.textContent = `$${totals.subtotal.toFixed(2)}`;
+    if (chkTotal) chkTotal.textContent = `$${totals.grandTotal.toFixed(2)} USD`;
   },
 
-  // Simulated validation and order completion
+  // Order completion and dispatching to Dashboard & Supabase
   submitOrder() {
     const currentLang = document.body.classList.contains('rtl-lang') ? 'ar' : 'en';
     
-    // Fetch input values for simple validation
+    // Fetch input values
     const fname = document.getElementById('bill-fname').value.trim();
     const lname = document.getElementById('bill-lname').value.trim();
     const email = document.getElementById('bill-email').value.trim();
@@ -114,52 +92,60 @@ const CheckoutManager = {
     const address = document.getElementById('bill-address').value.trim();
     const city = document.getElementById('bill-city').value.trim();
 
-    if (!fname || !lname || !email || !phone || !address || !city) {
+    if (!fname || !lname || !phone || !address || !city) {
       window.App.showToast(window.TRANSLATIONS[currentLang].required_error, 'error');
       return;
     }
 
-    // Propose confirmation success screen view
     const body = document.getElementById('checkout-modal-body-content');
     if (!body) return;
 
-    // Show loading spinner in the place order button
+    // Show loading spinner in place order button
     const placeBtn = document.getElementById('place-order-btn-submit');
     if (placeBtn) {
       placeBtn.disabled = true;
-      placeBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing...`;
+      placeBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> جاري إرسال الطلب للداشبورد...`;
     }
 
-    // Save order into woodash_orders for WooCommerce Dashboard sync
+    const totals = window.CartManager.getTotals();
     const orderItems = window.CartManager.items.map(item => ({
       name: item.nameAR || item.nameEN,
       qty: item.quantity,
       price: item.price
     }));
-    const totalAmount = window.CartManager.getTotals().subtotal;
+
+    const orderId = "GK-LB-" + Math.floor(1000 + Math.random() * 9000).toString();
 
     const newDashboardOrder = {
-      id: Math.floor(1000 + Math.random() * 9000).toString(),
+      id: orderId,
       customer: {
         name: `${fname} ${lname}`,
         phone: phone,
-        email: email,
+        email: email || `${phone}@client.lb`,
         address: address,
-        city: city
+        city: `${city} (لبنان)`
       },
       items: orderItems,
-      total: totalAmount,
-      payment_method: this.activePaymentMethod === 'card' ? 'بطاقة ائتمان (Credit Card)' : 'الدفع عند الاستلام (COD)',
-      status: 'pending', // معلق / لم يتم التعليق
+      subtotal: totals.subtotal,
+      shipping: totals.shipping,
+      total: totals.grandTotal,
+      payment_method: 'الدفع عند الاستلام كاش فقط (COD)',
+      status: 'pending',
       status_label: 'لم يتم التعليق / معلق',
       date: new Date().toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })
     };
 
     try {
+      // 1. Save locally to woodash_orders
       const existingOrders = JSON.parse(localStorage.getItem('woodash_orders')) || [];
       existingOrders.unshift(newDashboardOrder);
       localStorage.setItem('woodash_orders', JSON.stringify(existingOrders));
 
+      // 2. Broadcast via LocalStorage & Custom Events for same-origin tabs
+      localStorage.setItem('woodash_last_new_order', JSON.stringify({ order: newDashboardOrder, time: Date.now() }));
+      window.dispatchEvent(new CustomEvent('new_order_submitted', { detail: newDashboardOrder }));
+
+      // 3. Save to Supabase Cloud if configured
       if (window.supabaseManager) {
         window.supabaseManager.insertOrder(newDashboardOrder);
       }
@@ -167,7 +153,7 @@ const CheckoutManager = {
       console.error("Order sync error:", e);
     }
 
-    // Simulate server response delay of 1.5 seconds
+    // Process order success UI after 1 second
     setTimeout(() => {
       // Clear Cart state
       window.CartManager.clearCart();
@@ -179,7 +165,7 @@ const CheckoutManager = {
             <i class="fa-solid fa-check"></i>
           </div>
           <h3 class="success-title" data-i18n="success_title">${window.TRANSLATIONS[currentLang].success_title}</h3>
-          <p class="success-desc" data-i18n="success_desc">${window.TRANSLATIONS[currentLang].success_desc}</p>
+          <p class="success-desc">تم تسجيل طلبك رقم <strong>#${orderId}</strong> بقيمة إجمالية <strong>$${totals.grandTotal.toFixed(2)} USD</strong> (تشمل 4$ شحن لكافة مناطق لبنان) والدفع كاش عند الاستلام.</p>
           <div class="success-actions">
             <button class="success-btn success-btn-primary" onclick="CheckoutManager.completeAndClose()" data-i18n="success_home">
               ${window.TRANSLATIONS[currentLang].success_home}
@@ -195,13 +181,11 @@ const CheckoutManager = {
       const headerCloseBtn = document.getElementById('checkout-modal-header-close');
       if (headerCloseBtn) headerCloseBtn.style.display = 'none';
       
-    }, 1500);
+    }, 1000);
   },
 
-  // Refresh page or return to initial UI state after success button click
   completeAndClose() {
     this.closeCheckout();
-    // Reload page to reset forms and go back to home page
     window.location.reload();
   }
 };

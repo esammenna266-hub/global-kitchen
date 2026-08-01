@@ -175,11 +175,11 @@
           <span id="cart-subtotal-val">$0.00</span>
         </div>
         <div class="cart-total-row">
-          <span data-i18n="shipping">الشحن</span>
-          <span data-i18n="shipping_val">يُحسب في الخطوة التالية</span>
+          <span data-i18n="shipping">رسوم الشحن لكافة مناطق لبنان</span>
+          <span id="cart-shipping-val" style="color:#4f46e5; font-weight:700;">$4.00</span>
         </div>
         <div class="cart-total-row grand-total">
-          <span data-i18n="grand_total">الإجمالي التقريبي</span>
+          <span data-i18n="grand_total">الإجمالي النهائي</span>
           <span id="cart-grand-val">$0.00 USD</span>
         </div>
       </div>
@@ -206,7 +206,7 @@
         <form id="checkout-billing-form" class="checkout-grid">
           <!-- Step 1: Billing and Delivery Address -->
           <div class="checkout-form-section">
-            <h4 class="checkout-section-title" data-i18n="shipping_details">١. تفاصيل الشحن والتوصيل</h4>
+            <h4 class="checkout-section-title" data-i18n="shipping_details">١. تفاصيل الشحن والتوصيل (لبنان)</h4>
             
             <div class="form-row">
               <div class="form-group">
@@ -221,47 +221,35 @@
             
             <div class="form-row">
               <div class="form-group">
-                <label for="bill-email" class="form-label" data-i18n="email">البريد الإلكتروني *</label>
-                <input type="email" id="bill-email" class="form-input" required>
+                <label for="bill-email" class="form-label" data-i18n="email">البريد الإلكتروني (اختياري)</label>
+                <input type="email" id="bill-email" class="form-input" placeholder="client@example.com">
               </div>
               <div class="form-group">
                 <label for="bill-phone" class="form-label" data-i18n="phone">رقم الهاتف *</label>
-                <input type="tel" id="bill-phone" class="form-input" placeholder="+20 1xx xxxx xxx" required>
+                <input type="tel" id="bill-phone" class="form-input" placeholder="+961 03 xxx xxx" required>
               </div>
             </div>
             
             <div class="form-group">
-              <label for="bill-address" class="form-label" data-i18n="address">عنوان التوصيل (الشارع / رقم المنزل) *</label>
+              <label for="bill-address" class="form-label" data-i18n="address">عنوان التوصيل (المنطقة / الشارع / رقم البناء) *</label>
               <input type="text" id="bill-address" class="form-input" required>
             </div>
             
             <div class="form-group">
-              <label for="bill-city" class="form-label" data-i18n="city">المدينة / المحافظة *</label>
-              <input type="text" id="bill-city" class="form-input" required>
+              <label for="bill-city" class="form-label" data-i18n="city">المدينة / القضاء *</label>
+              <input type="text" id="bill-city" class="form-input" placeholder="مثال: بيروت، طرابلس، صيدا..." required>
             </div>
 
             <!-- Step 2: Payment Method Selector -->
             <h4 class="checkout-section-title" data-i18n="payment_method" style="margin-top: 25px;">٢. طريقة الدفع</h4>
             <div class="payment-options">
-              <!-- Credit Card Option -->
-              <div class="payment-card active" data-method="card">
+              <!-- Cash On Delivery Option ONLY -->
+              <div class="payment-card active" data-method="cod" style="border-color: #10b981; background: #ecfdf5;">
                 <input type="radio" name="payment_radio" class="payment-radio" checked>
                 <div class="payment-card-details">
-                  <span class="payment-card-name" data-i18n="pay_card">بطاقة ائتمان / مدى</span>
+                  <span class="payment-card-name" style="font-weight: 800; color: #065f46;" data-i18n="pay_cod">الدفع عند الاستلام كاش فقط 💵</span>
                   <div class="payment-card-icons">
-                    <i class="fa-brands fa-cc-visa"></i>
-                    <i class="fa-brands fa-cc-mastercard"></i>
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Cash On Delivery Option -->
-              <div class="payment-card" data-method="cod">
-                <input type="radio" name="payment_radio" class="payment-radio">
-                <div class="payment-card-details">
-                  <span class="payment-card-name" data-i18n="pay_cod">الدفع عند الاستلام</span>
-                  <div class="payment-card-icons">
-                    <i class="fa-solid fa-money-bill-wave"></i>
+                    <i class="fa-solid fa-money-bill-wave" style="color: #10b981;"></i>
                   </div>
                 </div>
               </div>
@@ -281,17 +269,17 @@
                 <span id="chk-subtotal-val">$0.00</span>
               </div>
               <div class="summary-item-row" style="color: var(--text-muted);">
-                <span data-i18n="shipping">الشحن</span>
-                <span style="color: #38A169; font-weight: 600;" data-i18n="new_badge">مجاني</span>
+                <span data-i18n="shipping">رسوم الشحن (لكافة مناطق لبنان)</span>
+                <span id="chk-shipping-val" style="color: #4f46e5; font-weight: 700;">$4.00</span>
               </div>
               <div class="summary-item-row grand-total" style="font-size: 16px; font-weight: 700; color: var(--dark-charcoal); border-top: 1px dotted var(--border-color); padding-top: 10px; margin-top: 10px; display:flex; justify-content:space-between;">
-                <span data-i18n="grand_total">الإجمالي التقريبي</span>
+                <span data-i18n="grand_total">الإجمالي النهائي</span>
                 <span id="chk-grand-val">$0.00 USD</span>
               </div>
             </div>
             
             <button type="submit" id="place-order-btn-submit" class="place-order-btn">
-              <span data-i18n="place_order">تأكيد وإرسال الطلب</span>
+              <span data-i18n="place_order">تأكيد وإرسال الطلب (كاش عند الاستلام)</span>
               <i class="fa-solid fa-square-check"></i>
             </button>
           </div>

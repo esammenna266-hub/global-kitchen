@@ -17,7 +17,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const settings = window.wcStore ? window.wcStore.getSettings() : { is_connected: false };
     updateConnectionUI(settings);
 
-    // Subscribe to Supabase Realtime Orders Live
+    // Listen for live orders from local storage changes across tabs
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'woodash_orders' || e.key === 'woodash_last_new_order') {
+            if (window.ordersManager) window.ordersManager.renderOrdersTable();
+            if (window.analyticsManager) window.analyticsManager.updateMetrics();
+            if (window.supabaseManager) window.supabaseManager.playNotificationSound();
+        }
+    });
+
+    // Listen for same-window order submit custom event
+    window.addEventListener('new_order_submitted', () => {
+        if (window.ordersManager) window.ordersManager.renderOrdersTable();
+        if (window.analyticsManager) window.analyticsManager.updateMetrics();
+        if (window.supabaseManager) window.supabaseManager.playNotificationSound();
+    });
+
+    // Subscribe to Supabase Realtime Orders Live (Cloud)
     if (window.supabaseManager) {
         window.supabaseManager.subscribeToRealtimeOrders((newOrder) => {
             alert(`🔔 وصل طلب جديد الآن من العميل: ${newOrder.customer_name || 'عميل المتجر'} بقيمة $${newOrder.total}`);

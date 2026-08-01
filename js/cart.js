@@ -4,6 +4,7 @@
 
 const CartManager = {
   items: [],
+  FIXED_SHIPPING_FEE: 4.00, // Fixed $4.00 Flat Shipping Rate for Lebanon
 
   // Load cart items from local storage
   init() {
@@ -74,18 +75,23 @@ const CartManager = {
     }
   },
 
-  // Clear all items from cart (e.g. after successful checkout)
+  // Clear all items from cart
   clearCart() {
     this.items = [];
     this.save();
     this.updateUI();
   },
 
-  // Calculate totals
+  // Calculate subtotal, fixed shipping ($4.00 for Lebanon), and grand total
   getTotals() {
     const subtotal = this.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const shipping = this.items.length > 0 ? this.FIXED_SHIPPING_FEE : 0.00;
+    const grandTotal = subtotal > 0 ? subtotal + shipping : 0.00;
+
     return {
       subtotal: parseFloat(subtotal.toFixed(2)),
+      shipping: parseFloat(shipping.toFixed(2)),
+      grandTotal: parseFloat(grandTotal.toFixed(2)),
       count: this.items.reduce((sum, item) => sum + item.quantity, 0)
     };
   },
@@ -153,12 +159,16 @@ const CartManager = {
     if (subtotalLabel) {
       subtotalLabel.textContent = `$${totals.subtotal.toFixed(2)}`;
     }
+    const shippingLabel = document.getElementById('cart-shipping-val');
+    if (shippingLabel) {
+      shippingLabel.textContent = `$${totals.shipping.toFixed(2)}`;
+    }
     const grandLabel = document.getElementById('cart-grand-val');
     if (grandLabel) {
-      grandLabel.textContent = `$${totals.subtotal.toFixed(2)} USD`;
+      grandLabel.textContent = `$${totals.grandTotal.toFixed(2)} USD`;
     }
 
-    // Dynamic grid synchronization: Redraw products grid to update card quantity counts
+    // Dynamic grid synchronization
     if (window.FilterManager && typeof window.FilterManager.filterAndRender === 'function') {
       window.FilterManager.filterAndRender();
     }
