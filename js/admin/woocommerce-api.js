@@ -1,6 +1,6 @@
 /**
  * WooCommerce API & Local Storage Store Layer for Integrated Admin
- * USD Currency & Global Kitchen Direct Synchronization
+ * USD Currency & Global Kitchen Direct Synchronization (Explicit Profit Margin % Layer)
  */
 
 const STORAGE_KEYS = {
@@ -17,13 +17,22 @@ function getGlobalKitchenSeedProducts() {
             if (p.category === 'utensils') catName = 'أدوات ومستلزمات المطبخ';
             else if (p.category === 'tableware') catName = 'تقديم وسفرة فاخرة';
 
+            const costPrice = parseFloat(p.price) || 1.50;
+            const profitMargin = 30; // 30% Standard Default Profit Margin
+            const sellingPrice = parseFloat((costPrice * 1.30).toFixed(2));
+
             return {
                 id: "gk-prod-" + p.id,
                 title: p.nameAR || p.nameEN,
                 nameEN: p.nameEN,
                 sku: "GK-" + p.id,
-                price: parseFloat(p.price) || 1.50,
-                regular_price: p.originalPrice ? parseFloat(p.originalPrice) : parseFloat((p.price * 1.25).toFixed(2)),
+                costPrice: costPrice,
+                profitMargin: profitMargin,
+                price: sellingPrice,
+                originalPrice: sellingPrice,
+                regular_price: sellingPrice,
+                isSale: false,
+                isFlashSale: false,
                 stock: Math.floor(12 + (p.id % 25)),
                 category: catName,
                 spec: p.specAR || p.specEN || '',
@@ -38,8 +47,13 @@ function getGlobalKitchenSeedProducts() {
             id: "prod-101",
             title: "علبة مونة صغيرة فوميه غطاء سحب ١.٢ لتر",
             sku: "GK-101",
-            price: 1.60,
-            regular_price: 2.00,
+            costPrice: 1.60,
+            profitMargin: 30,
+            price: 2.08,
+            originalPrice: 2.08,
+            regular_price: 2.08,
+            isSale: false,
+            isFlashSale: false,
             stock: 24,
             category: "منظمات ومؤونة",
             image: "assets/products/img_p1_1.jpeg",
@@ -60,68 +74,14 @@ const INITIAL_DEMO_ORDERS = [
             city: "القاهرة"
         },
         items: [
-            { name: "علبة مونة كبيرة فوميه غطاء سحب ٢.٧ لتر", qty: 2, price: 2.50 },
-            { name: "طقم ٣ مراطبين مربع فوميه غطاء سيليكون", qty: 1, price: 3.00 }
+            { name: "علبة مونة كبيرة فوميه غطاء سحب ٢.٧ لتر", qty: 2, price: 3.25 },
+            { name: "طقم ٣ مراطبين مربع فوميه غطاء سيليكون", qty: 1, price: 3.90 }
         ],
-        total: 8.00,
-        payment_method: "الدفع عند الاستلام (COD)",
+        total: 10.40,
+        payment_method: "الدفع عند الاستلام كاش فقط (COD)",
         status: "pending",
         status_label: "لم يتم التعليق / معلق",
         date: "2026-07-27 14:20"
-    },
-    {
-        id: "GK-1093",
-        customer: {
-            name: "سارة محمد الشريف",
-            phone: "01122334455",
-            email: "sara.mohamed@outlook.com",
-            address: "حي الجامعة، المنصورة",
-            city: "الدقهلية"
-        },
-        items: [
-            { name: "مرطبان مستطيل كبير فوميه ٣.٢ لتر", qty: 3, price: 1.90 }
-        ],
-        total: 5.70,
-        payment_method: "بطاقة ائتمان (Credit Card)",
-        status: "processing",
-        status_label: "قيد المعالجة والتجهيز",
-        date: "2026-07-27 11:05"
-    },
-    {
-        id: "GK-1092",
-        customer: {
-            name: "مهندس طارق الزيات",
-            phone: "01288776655",
-            email: "tareik.zayat@tech.com",
-            address: "سموحة، بجوار النادي، الإسكندرية",
-            city: "الإسكندرية"
-        },
-        items: [
-            { name: "طقم ١٢ علبة بهار مع ملاعق على ستاند يتعلق", qty: 1, price: 11.00 }
-        ],
-        total: 11.00,
-        payment_method: "فودافون كاش",
-        status: "delivered",
-        status_label: "تم التسليم بنجاح",
-        date: "2026-07-26 18:40"
-    },
-    {
-        id: "GK-1091",
-        customer: {
-            name: "مصطفى حسن كمال",
-            phone: "01555443322",
-            email: "mostafa.k@yahoo.com",
-            address: "شارع الجلاء، طنطا",
-            city: "الغربية"
-        },
-        items: [
-            { name: "صينية تنشيف ومشك صحون ٢ في ١", qty: 2, price: 3.50 }
-        ],
-        total: 7.00,
-        payment_method: "الدفع عند الاستلام",
-        status: "undelivered",
-        status_label: "لم يتم التسليم / العميل لم يرد",
-        date: "2026-07-25 16:15"
     }
 ];
 
@@ -132,9 +92,8 @@ class WooCommerceStoreManager {
 
     initStorage() {
         const seedProducts = getGlobalKitchenSeedProducts();
-        if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
-            localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(seedProducts));
-        }
+        // Force refresh local storage seed products to apply profitMargin structure
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(seedProducts));
         if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
             localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_DEMO_ORDERS));
         }
@@ -156,12 +115,24 @@ class WooCommerceStoreManager {
 
     addProduct(productData) {
         const products = this.getProducts();
+        const costPrice = parseFloat(productData.costPrice || productData.price || 2.00);
+        const profitMargin = parseFloat(productData.profitMargin !== undefined ? productData.profitMargin : 30);
+        const sellingPrice = parseFloat((costPrice + (costPrice * (profitMargin / 100))).toFixed(2));
+        const stdPrice30 = parseFloat((costPrice * 1.30).toFixed(2));
+
+        const isFlash = profitMargin < 30;
+
         const newProduct = {
             id: 'gk-prod-' + Date.now(),
             title: productData.title,
             sku: productData.sku || 'GK-SKU-' + Math.floor(1000 + Math.random() * 9000),
-            price: parseFloat(productData.price) || 0,
-            regular_price: parseFloat(productData.regular_price) || parseFloat(productData.price) || 0,
+            costPrice: costPrice,
+            profitMargin: profitMargin,
+            price: sellingPrice,
+            originalPrice: stdPrice30,
+            regular_price: stdPrice30,
+            isSale: isFlash,
+            isFlashSale: isFlash,
             stock: parseInt(productData.stock) || 15,
             category: productData.category || 'عام',
             spec: productData.spec || '',
@@ -176,7 +147,29 @@ class WooCommerceStoreManager {
 
     updateProduct(productId, updatedFields) {
         let products = this.getProducts();
-        products = products.map(p => p.id === productId ? { ...p, ...updatedFields } : p);
+        products = products.map(p => {
+            if (p.id === productId) {
+                const merged = { ...p, ...updatedFields };
+                const costPrice = parseFloat(merged.costPrice || merged.price || 1.00);
+                const profitMargin = parseFloat(merged.profitMargin !== undefined ? merged.profitMargin : 30);
+                const sellingPrice = parseFloat((costPrice + (costPrice * (profitMargin / 100))).toFixed(2));
+                const stdPrice30 = parseFloat((costPrice * 1.30).toFixed(2));
+
+                const isFlash = profitMargin < 30;
+
+                return {
+                    ...merged,
+                    costPrice: costPrice,
+                    profitMargin: profitMargin,
+                    price: sellingPrice,
+                    originalPrice: stdPrice30,
+                    regular_price: stdPrice30,
+                    isSale: isFlash,
+                    isFlashSale: isFlash
+                };
+            }
+            return p;
+        });
         this.saveProducts(products);
     }
 

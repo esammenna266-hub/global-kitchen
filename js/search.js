@@ -73,7 +73,8 @@ const FilterManager = {
       : (window.PRODUCTS || []);
 
     const filtered = catalogSource.filter(prod => {
-      const isFlash = prod.isSale || prod.isFlashSale || (prod.originalPrice && prod.price < prod.originalPrice);
+      const margin = prod.profitMargin !== undefined ? prod.profitMargin : 30;
+      const isFlash = margin < 30 || prod.isFlashSale === true;
       
       let matchesCategory = false;
       if (this.activeCategory === 'all') {
@@ -104,11 +105,12 @@ const FilterManager = {
       const name = currentLang === 'ar' ? (prod.nameAR || prod.title) : (prod.nameEN || prod.title);
       const spec = currentLang === 'ar' ? (prod.specAR || prod.spec || '') : (prod.specEN || prod.spec || '');
       
-      const isFlash = prod.isSale || prod.isFlashSale || (prod.originalPrice && prod.price < prod.originalPrice);
+      const margin = prod.profitMargin !== undefined ? prod.profitMargin : 30;
+      const isFlash = margin < 30 || prod.isFlashSale === true;
 
       let badgesHTML = '';
       if (isFlash) {
-        badgesHTML += `<span class="badge badge-sale badge-flash-sale-live" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; font-weight: 800; border-radius: 20px; padding: 4px 10px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); border: 1px solid #fca5a5;">🔥 عرض محدود | Flash Sale</span>`;
+        badgesHTML += `<span class="badge badge-sale badge-flash-sale-live" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: #ffffff; font-weight: 800; border-radius: 20px; padding: 4px 10px; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); border: 1px solid #fca5a5;">🔥 عرض محدود (${margin}% ربح)</span>`;
       } else if (prod.isNew) {
         badgesHTML += `<span class="badge badge-new" data-i18n="new_badge">${window.TRANSLATIONS[currentLang].new_badge}</span>`;
       }

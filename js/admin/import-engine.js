@@ -351,7 +351,14 @@ class SmartImportEngine {
         countSpan.textContent = this.extractedProducts.length;
         this.updateSelectedCount();
 
-        grid.innerHTML = this.extractedProducts.map((p, idx) => `
+        grid.innerHTML = this.extractedProducts.map((p, idx) => {
+            const margin = p.profitMargin !== undefined ? p.profitMargin : 30;
+            const cost = p.costPrice || 0;
+            const sellingPrice = cost + (cost * (margin / 100));
+            p.price = parseFloat(sellingPrice.toFixed(2));
+            const isFlash = margin < 30;
+
+            return `
             <div class="extracted-card glass ${p.selected ? 'selected' : ''}" id="ext-card-${idx}">
                 <input type="checkbox" class="extracted-card-checkbox" ${p.selected ? 'checked' : ''} onchange="window.importEngine.toggleExtractedSelect(${idx}, this.checked)">
                 
@@ -373,28 +380,41 @@ class SmartImportEngine {
 
                 <div class="extracted-card-meta" style="margin-top:8px; border-top:1px solid var(--border-subtle); padding-top:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; font-size:0.78rem;">
-                        <small style="color:var(--text-muted);">سعر المورد (بالشيت):</small>
-                        <span style="font-weight:700; color:var(--text-secondary);">$${Number(p.costPrice).toFixed(2)}</span>
+                        <small style="color:var(--text-muted);">سعر التكلفة (المورد):</small>
+                        <span style="font-weight:700; color:var(--text-secondary);">$${Number(cost).toFixed(2)}</span>
                     </div>
 
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:#ecfdf5; padding:4px 6px; border-radius:6px; border:1px solid #a7f3d0;">
-                        <small style="color:#065f46; font-weight:800;">سعر المتجر (+30% ربح):</small>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:0.78rem;">
+                        <small style="color:var(--text-muted); font-weight:700;">نسبة الربح (%):</small>
                         <div style="display:inline-flex; align-items:center; gap:2px;">
-                            <span style="font-weight:800; color:#047857;">$</span>
-                            <input type="number" step="0.01" value="${Number(p.price).toFixed(2)}" class="custom-input extracted-card-price-input" style="width:75px; font-weight:900; color:#047857; background:#ffffff; border-color:#6ee7b7;" onchange="window.importEngine.updateExtractedPriceDirect(${idx}, parseFloat(this.value)||0)">
+                            <input type="number" step="1" value="${margin}" class="custom-input" style="width:55px; font-weight:800; text-align:center; padding:2px 4px;" onchange="window.importEngine.updateExtractedMargin(${idx}, parseFloat(this.value)||0)">
+                            <span style="font-weight:800; font-size:0.8rem;">%</span>
                         </div>
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; align-items:center; background:${isFlash ? '#fff5f5' : '#ecfdf5'}; padding:4px 6px; border-radius:6px; border:1px solid ${isFlash ? '#fca5a5' : '#a7f3d0'};">
+                        <small style="color:${isFlash ? '#b91c1c' : '#065f46'}; font-weight:800;">سعر المتجر النهائي:</small>
+                        <span style="font-weight:900; color:${isFlash ? '#b91c1c' : '#047857'}; font-size:1.05rem;">$${Number(p.price).toFixed(2)}</span>
                     </div>
                 </div>
 
                 <div style="font-size:0.72rem; color:var(--text-muted); text-align:left; margin-top:6px; display:flex; justify-content:space-between;">
                     <span>${p.source}</span>
-                    <span style="color:#059669; font-weight:700;">+30% Profit</span>
+                    ${isFlash ? `<span style="color:#b91c1c; font-weight:800;">🔥 Flash Sale (${margin}%)</span>` : `<span style="color:#059669; font-weight:700;">30% ربح قياسي</span>`}
                 </div>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
         container.classList.remove('hidden');
         if (window.lucide) lucide.createIcons();
+    }
+
+    updateExtractedMargin(index, marginPercent) {
+        if (this.extractedProducts[index]) {
+            this.extractedProducts[index].profitMargin = marginPercent;
+            this.renderExtractedPreview();
+        }
     }
 
     toggleExtractedSelect(index, isChecked) {
