@@ -645,11 +645,17 @@ alter publication supabase_realtime add table products;
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>رابط صورة المنتج</label>
-                    <input type="text" id="pm-image" class="custom-input" placeholder="assets/products/img_p1_1.jpeg" onchange="document.getElementById('pm-img-preview').src = this.value">
+                    <label>صورة المنتج (رفع من الجهاز أو رابط مباشر)</label>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" id="pm-image" class="custom-input flex-1" placeholder="اختر صورة من جهازك أو ادخل رابط الصورة" onchange="document.getElementById('pm-img-preview').src = this.value">
+                        <input type="file" id="pm-image-file" accept="image/*" style="display:none;" onchange="window.productsManager.handleImageFileUpload(this)">
+                        <button type="button" class="btn btn-secondary" style="white-space:nowrap;" onclick="document.getElementById('pm-image-file').click()">
+                            <i data-lucide="upload"></i> اختيار صورة من جهازك
+                        </button>
+                    </div>
                     <div style="margin-top:8px; display:flex; align-items:center; gap:10px;">
                         <small style="color:var(--text-secondary);">معاينة الصورة الحالية:</small>
-                        <img id="pm-img-preview" src="" style="width:50px; height:50px; object-fit:cover; border-radius:6px; border:1px solid var(--border-subtle);" onerror="this.src='assets/products/img_p1_1.jpeg'">
+                        <img id="pm-img-preview" src="" style="width:55px; height:55px; object-fit:cover; border-radius:6px; border:1px solid var(--border-subtle);" onerror="this.src='assets/products/img_p1_1.jpeg'">
                     </div>
                 </div>
                 <div class="form-group">

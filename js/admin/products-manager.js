@@ -237,6 +237,24 @@ class ProductsManager {
         document.getElementById('product-modal').classList.remove('hidden');
     }
 
+    handleImageFileUpload(fileInput) {
+        if (!fileInput || !fileInput.files || !fileInput.files[0]) return;
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+            const dataUrl = e.target.result;
+            const pmImg = document.getElementById('pm-image');
+            const pmPreview = document.getElementById('pm-img-preview');
+
+            if (pmImg) pmImg.value = dataUrl;
+            if (pmPreview) pmPreview.src = dataUrl;
+        };
+
+        reader.readAsDataURL(file);
+    }
+
     closeModal() {
         document.getElementById('product-modal').classList.add('hidden');
     }
