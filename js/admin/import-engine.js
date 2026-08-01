@@ -239,8 +239,7 @@ class SmartImportEngine {
     // Extract embedded images from a PDF page using operator list (with timeout protection)
     async extractImagesFromPage(page, canvas, viewport) {
         const images = [];
-        const MAX_IMG_PIXELS = 2000 * 2000; // Skip images larger than 4MP to avoid memory issues
-        const IMG_TIMEOUT_MS = 3000; // 3 second timeout per image
+        const IMG_TIMEOUT_MS = 8000; // 8 second timeout per image (no size limit)
 
         try {
             const ops = await page.getOperatorList();
@@ -279,17 +278,13 @@ class SmartImportEngine {
                         const imgW = imgData.width || 0;
                         const imgH = imgData.height || 0;
 
-                        // Skip tiny images (icons, dots) and huge images (full-page backgrounds)
-                        if (imgW < 30 || imgH < 30) continue;
-                        if (imgW * imgH > MAX_IMG_PIXELS) {
-                            console.warn(`Skipping oversized image ${imgName}: ${imgW}x${imgH}`);
-                            continue;
-                        }
+                        // Skip only tiny images (icons, dots, decorations)
+                        if (imgW < 20 || imgH < 20) continue;
 
                         // Render image to a small canvas to get data URL
                         const imgCanvas = document.createElement('canvas');
-                        // Cap output size to 400px max dimension for performance
-                        const maxDim = 400;
+                        // Scale down for display but keep good quality
+                        const maxDim = 500;
                         const ratio = Math.min(maxDim / imgW, maxDim / imgH, 1);
                         imgCanvas.width = Math.round(imgW * ratio);
                         imgCanvas.height = Math.round(imgH * ratio);
