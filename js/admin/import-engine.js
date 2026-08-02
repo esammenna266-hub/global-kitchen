@@ -356,117 +356,118 @@ class SmartImportEngine {
     }
 
     // Reconstruct product rows from text items + images
+    // Based on actual catalog PDF analysis:
+    // Columns: Description(X<236), EngDesc(236-420), CrtRate(420-495), Unit(495-548), 
+    //          Code&Barcode(548-814), Picture(814-1098), Price$(1098+)
+    // All X values are in canvas coordinates (PDF * 2.0 scale)
+    // Product images: large (>400px wide), at X > 800 in canvas coords
+    // Barcode images: small (190x134), at X ≈ 400 — skip these
     reconstructTableProducts(textItems, images, pageNum, canvas, viewport) {
         if (textItems.length === 0) return [];
 
-        // Group text items into rows by Y coordinate (bucket size 12px)
-        const rowMap = new Map();
-        textItems.forEach(item => {
-            const yBucket = Math.round(item.y / 12) * 12;
-            if (!rowMap.has(yBucket)) rowMap.set(yBucket, []);
-            rowMap.get(yBucket).push(item);
+        const SCALE = 2.0;
+        // Column boundaries in canvas coordinates (PDF coords * 2)
+        const COL_DESC_END = 236;      // Arabic description ends
+        const COL_ENG_START = 236;     // English description starts
+        const COL_ENG_END = 420;       // English description ends
+        const COL_PRICE_START = 1098;  // Price column starts (X > 549 in PDF * 2)
+
+        // Step 1: Find all text items that could be prices (rightmost column)
+        const priceItems = textItems.filter(t => {
+            const numMatch = t.str.match(/^(\d{1,4}(?:\.\d{1,2})?)$/);
+            return numMatch && t.x > COL_PRICE_START;
         });
 
-        // Sort rows top-to-bottom
-        const sortedYs = Array.from(rowMap.keys()).sort((a, b) => a - b);
-
-        // Merge very close rows (within 15px) into single logical rows
-        const mergedRows = [];
-        let currentGroup = [];
-        let lastY = -100;
-
-        sortedYs.forEach(y => {
-            if (y - lastY > 15 && currentGroup.length > 0) {
-                mergedRows.push(currentGroup.flat());
-                currentGroup = [];
-            }
-            currentGroup.push(rowMap.get(y));
-            lastY = y;
-        });
-        if (currentGroup.length > 0) mergedRows.push(currentGroup.flat());
-
-        // Detect header row and skip it
-        let dataStartIdx = 0;
-        for (let i = 0; i < Math.min(mergedRows.length, 5); i++) {
-            const rowText = mergedRows[i].map(it => it.str).join(' ').toLowerCase();
-            if (rowText.includes('description') || rowText.includes('price') || 
-                rowText.includes('اسم') || rowText.includes('سعر') ||
-                rowText.includes('code') || rowText.includes('barcode') ||
-                rowText.includes('unit') || rowText.includes('picture')) {
-                dataStartIdx = i + 1;
-            }
+        // If no prices found in rightmost column, fall back to looking for $ sign
+        if (priceItems.length === 0) {
+            textItems.forEach(t => {
+                if (t.str === '$' || t.str.match(/\$\s*\d+/)) {
+                    // Don't add, just note that prices may be formatted differently
+                }
+            });
         }
 
-        // Now build products from remaining rows
-        // Strategy: Accumulate text lines until we find a price pattern,
-        // then flush as one product
+        // Step 2: Group all text and prices by product rows using price Y positions
+        // Each price Y position marks a product row
         const products = [];
-        let currentBlock = { texts: [], yMin: Infinity, yMax: -Infinity };
-        
-        const flushProduct = () => {
-            if (currentBlock.texts.length === 0) return;
-            
-            const allText = currentBlock.texts.map(t => t.str).join(' ');
-            
-            // Extract price ($ followed by number, or number followed by $)
+
+        // Get unique product Y zones by finding price items and $ signs
+        const productYs = [];
+        priceItems.forEach(pi => {
+            // Check if there's already a Y zone close to this
+            const existing = productYs.find(y => Math.abs(y - pi.y) < 30);
+            if (!existing) {
+                productYs.push(pi.y);
+            }
+        });
+        productYs.sort((a, b) => a - b);
+
+        // If we didn't find clear price rows, fall back to detecting Arabic text blocks
+        if (productYs.length === 0) {
+            const arabicItems = textItems.filter(t => t.x < COL_DESC_END && /[\u0600-\u06FF]/.test(t.str));
+            arabicItems.forEach(ai => {
+                const existing = productYs.find(y => Math.abs(y - ai.y) < 30);
+                if (!existing) productYs.push(ai.y);
+            });
+            productYs.sort((a, b) => a - b);
+        }
+
+        // Step 3: For each product Y zone, collect all text in that band
+        for (let i = 0; i < productYs.length; i++) {
+            const yCenter = productYs[i];
+            const yTop = (i > 0) ? (productYs[i - 1] + yCenter) / 2 : yCenter - 50;
+            const yBottom = (i < productYs.length - 1) ? (yCenter + productYs[i + 1]) / 2 : yCenter + 80;
+
+            const bandItems = textItems.filter(t => t.y >= yTop && t.y < yBottom);
+
+            // Arabic description (leftmost column)
+            const arabicItems = bandItems.filter(t => t.x < COL_DESC_END);
+            const arabicText = arabicItems.map(t => t.str).join(' ').replace(/<br>/g, ' ').trim();
+
+            // English description
+            const engItems = bandItems.filter(t => t.x >= COL_ENG_START && t.x < COL_ENG_END);
+            const engText = engItems.map(t => t.str).join(' ').replace(/<br>/g, ' ').trim();
+
+            // Price (rightmost)
+            const priceInBand = bandItems.filter(t => t.x >= COL_PRICE_START);
             let costPrice = 0;
-            const pricePatterns = [
-                /(\d{1,4}(?:\.\d{1,2})?)\s*\$/,
-                /\$\s*(\d{1,4}(?:\.\d{1,2})?)/,
-                /(\d{1,4}\.\d{2})\s*$/
-            ];
-            for (const pattern of pricePatterns) {
-                const match = allText.match(pattern);
-                if (match) {
-                    costPrice = parseFloat(match[1]);
-                    break;
+            for (const pi of priceInBand) {
+                const m = pi.str.match(/(\d{1,5}(?:\.\d{1,2})?)/);
+                if (m) {
+                    const val = parseFloat(m[1]);
+                    if (val > 0.5 && val < 50000) { costPrice = val; break; }
                 }
             }
 
-            // Also check individual items for price on the right side of the page
-            const rightItems = currentBlock.texts.filter(t => t.x > viewport.width * 0.7);
-            if (costPrice === 0) {
-                for (const ri of rightItems) {
-                    const pm = ri.str.match(/(\d{1,4}(?:\.\d{1,2})?)/);
-                    if (pm) {
-                        const val = parseFloat(pm[1]);
-                        if (val > 0.5 && val < 5000) { costPrice = val; break; }
-                    }
-                }
-            }
-
-            // Extract barcode/SKU
+            // Barcode/SKU
+            const codeItems = bandItems.filter(t => t.x >= 548 && t.x < 814);
             let sku = '';
-            const barcodeMatch = allText.match(/\b(69\d{10,11}|86\d{10,11}|45\d{10,11}|\d{10,13})\b/);
-            const codeMatch = allText.match(/\b(CSM\/[A-Z0-9\/_-]+|GDF\/[A-Z0-9\/_-]+)\b/i);
-            if (barcodeMatch) sku = barcodeMatch[1];
-            else if (codeMatch) sku = codeMatch[1];
-            else sku = `PDF-P${pageNum}-${products.length + 1}`;
+            for (const ci of codeItems) {
+                const bm = ci.str.match(/(\d{10,13})/);
+                const cm = ci.str.match(/(CSM\/[A-Z0-9\/_-]+|GDF\/[A-Z0-9\/_-]+)/i);
+                if (bm) { sku = bm[1]; break; }
+                if (cm) { sku = cm[1]; }
+            }
+            if (!sku) sku = `PDF-P${pageNum}-${products.length + 1}`;
 
-            // Extract title: take text from the left side, clean up noise
-            const leftItems = currentBlock.texts
-                .filter(t => t.x < viewport.width * 0.55)
-                .sort((a, b) => a.y - b.y || a.x - b.x);
-            
-            let title = leftItems.map(t => t.str).join(' ')
-                .replace(/\b(NEW PRODUCT|BACK IN STOCK|Piece|Pcs|piece)\b/gi, '')
-                .replace(/\b\d{10,13}\b/g, '') // Remove barcodes from title
-                .replace(/\$\s*\d+(\.\d+)?|\d+(\.\d+)?\s*\$/g, '') // Remove prices
-                .replace(/<br>/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-
-            if (!title || title.length < 3) {
-                title = allText.substring(0, 60).replace(/\s+/g, ' ').trim();
+            // Build title: Arabic + English combined
+            let title = '';
+            if (engText.length > 3) {
+                title = engText
+                    .replace(/\b(NEW PRODUCT|BACK IN STOCK|Piece|Pcs)\b/gi, '')
+                    .replace(/<br>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+            }
+            if (arabicText.length > 3 && title.length > 3) {
+                title = title + ' - ' + arabicText.replace(/\d{6,}/g, '').trim();
+            } else if (arabicText.length > 3) {
+                title = arabicText.replace(/\d{6,}/g, '').trim();
             }
 
-            if (title.length < 3) return; // Skip empty/trivial blocks
+            if (!title || title.length < 3) continue; // Skip empty rows
 
-            // Image will be assigned after all products are built (sequential matching)
-            let productImage = '';
-
-            if (costPrice === 0) costPrice = 5.00; // Fallback
-
+            if (costPrice === 0) costPrice = 5.00;
             const sellingPrice = this.calculateSellingPrice(costPrice);
 
             products.push({
@@ -477,52 +478,25 @@ class SmartImportEngine {
                 profitMargin: 30,
                 sku,
                 category: 'مستلزمات منزلية ومطبخ',
-                image: productImage,
+                image: '', // Will be assigned below
                 selected: true,
                 source: `ملف PDF (صفحة ${pageNum})`
             });
-        };
-
-        // Process data rows
-        for (let i = dataStartIdx; i < mergedRows.length; i++) {
-            const row = mergedRows[i];
-            const rowText = row.map(t => t.str).join(' ');
-            const rowYs = row.map(t => t.y);
-            const rowMinY = Math.min(...rowYs);
-            const rowMaxY = Math.max(...rowYs);
-
-            // Check if this row has a price indicator (signals end of a product block)
-            const hasPrice = pricePatterns_global_test(rowText);
-            const hasBigGap = currentBlock.yMax > 0 && (rowMinY - currentBlock.yMax) > 40;
-
-            if (hasBigGap && currentBlock.texts.length > 0) {
-                flushProduct();
-                currentBlock = { texts: [], yMin: Infinity, yMax: -Infinity };
-            }
-
-            currentBlock.texts.push(...row);
-            currentBlock.yMin = Math.min(currentBlock.yMin, rowMinY);
-            currentBlock.yMax = Math.max(currentBlock.yMax, rowMaxY);
-
-            if (hasPrice) {
-                flushProduct();
-                currentBlock = { texts: [], yMin: Infinity, yMax: -Infinity };
-            }
         }
-        // Flush remaining
-        flushProduct();
 
         // ═══════════════════════════════════════════════════
-        // SEQUENTIAL IMAGE-TO-PRODUCT MATCHING
-        // Filter out non-product images (very small decorations, logos)
-        // Then assign images to products in order (top to bottom)
+        // IMAGE MATCHING: Filter barcode images, keep only product photos
+        // Barcode images are exactly 190x134 — skip them
+        // Product images are much larger (400px+ wide)
         // ═══════════════════════════════════════════════════
         const productImages = images.filter(img => {
-            // Keep images that are likely product photos (not tiny icons/lines)
-            return img.width >= 40 && img.height >= 40;
+            // Skip barcode images (190x134 or similar small sizes)
+            if (img.width <= 200 && img.height <= 150) return false;
+            // Keep only substantial product images
+            return img.width >= 300 || img.height >= 300;
         });
 
-        // Assign images to products sequentially
+        // Assign product images sequentially (both sorted top-to-bottom)
         for (let p = 0; p < products.length; p++) {
             if (p < productImages.length) {
                 products[p].image = productImages[p].dataUrl;
