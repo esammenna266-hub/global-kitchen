@@ -91,9 +91,10 @@ class WooCommerceStoreManager {
     }
 
     initStorage() {
-        const seedProducts = getGlobalKitchenSeedProducts();
-        // Force refresh local storage seed products to apply profitMargin structure
-        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(seedProducts));
+        if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
+            const seedProducts = getGlobalKitchenSeedProducts();
+            localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(seedProducts));
+        }
         if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
             localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_DEMO_ORDERS));
         }
@@ -111,6 +112,10 @@ class WooCommerceStoreManager {
 
     saveProducts(products) {
         localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products));
+    }
+
+    clearAllProducts() {
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify([]));
     }
 
     addProduct(productData) {

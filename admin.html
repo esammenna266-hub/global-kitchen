@@ -283,6 +283,9 @@
                         </select>
                     </div>
                     <div class="button-group">
+                        <button class="btn btn-danger-outline" onclick="if(confirm('هل أنت متأكد من تفريغ كل المنتجات الحالية لتبدأ من جديد بمنتجاتك الخاصة؟')){ window.wcStore.clearAllProducts(); window.productsManager.renderTable(); alert('تم تفريغ الكتالوج بنجاح! يمكنك الآن استيراد ملف الـ PDF الخاص بك.'); }" style="color:#ef4444; border:1px solid #fca5a5;">
+                            <i data-lucide="trash-2"></i> تفريغ الكتالوج القديم
+                        </button>
                         <button class="btn btn-secondary" onclick="generateSampleExcelFile()">
                             <i data-lucide="download"></i> تحميل شيت نماذج تجريبي
                         </button>
