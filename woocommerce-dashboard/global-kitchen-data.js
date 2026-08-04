@@ -1,4 +1,4 @@
-const PRODUCTS = [
+const GLOBAL_KITCHEN_PRODUCTS = [
     {
         "id": 101,
         "category": "storage",
@@ -1508,5 +1508,5 @@ const PRODUCTS = [
     }
 ];
 
-if (typeof window !== 'undefined') { window.PRODUCTS = PRODUCTS; }
-if (typeof module !== 'undefined') { module.exports = { PRODUCTS }; }
+if (typeof window !== 'undefined') { window.GLOBAL_KITCHEN_PRODUCTS = GLOBAL_KITCHEN_PRODUCTS; }
+if (typeof module !== 'undefined') { module.exports = { GLOBAL_KITCHEN_PRODUCTS }; }

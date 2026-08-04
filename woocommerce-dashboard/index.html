@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- PDF.js for PDF Reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <link rel="stylesheet" href="css/admin.css?v=999">
+    <link rel="stylesheet" href="styles.css?v=999">
 </head>
 <body class="light-theme">
 
@@ -374,19 +374,30 @@
 
                 <!-- Import Preview Section -->
                 <div class="import-preview-section hidden margin-top-lg" id="import-preview-container">
-                    <div class="section-header glass">
+                    <div class="section-header glass" style="flex-wrap: wrap; gap: 15px;">
                         <div>
-                            <h3>المنتجات المستخرجة من الملف (<span id="extracted-count">0</span> منتج)</h3>
-                            <p>راجع المنتجات والصور والأسعار قبل اعتمادها وإضافتها لكتالوج المتجر</p>
+                            <h3>المنتجات المستخرجة من الكتالوج (<span id="extracted-count">0</span> منتج) | ⚠️ قائمة المراجعة: <span id="review-queue-count" class="badge badge-warning">0</span></h3>
+                            <p>يتم استخراج البيانات وتطبيق صافي الربح 30% تلقائياً، مع توليد روابط الصور المباشرة (image_url)</p>
                         </div>
+
+                        <!-- Global Margin Controller Bar -->
+                        <div style="display:flex; align-items:center; gap:8px; background:rgba(99, 102, 241, 0.08); padding:8px 14px; border-radius:8px; border:1px solid rgba(99, 102, 241, 0.2);">
+                            <label style="font-weight:800; font-size:0.85rem; color:var(--primary-color);">نسبة الربح الافتراضية لكل الكتالوج (%):</label>
+                            <input type="number" id="global-profit-margin-input" value="30" class="custom-input" style="width:65px; font-weight:900; text-align:center; color:#6366f1;" onchange="window.importEngine.applyGlobalMarginToAll(this.value)">
+                            <span style="font-weight:900; color:#6366f1;">%</span>
+                        </div>
+
                         <div class="button-group">
-                            <button class="btn btn-secondary btn-sm" onclick="selectAllExtracted(true)">
+                            <button class="btn btn-secondary btn-sm" onclick="window.importEngine.exportToWooCommerceExcel()">
+                                <i data-lucide="file-spreadsheet"></i> تصدير شيت Excel بـ image_url
+                            </button>
+                            <button class="btn btn-secondary btn-sm" onclick="window.importEngine.selectAll(true)">
                                 تحديد الكل
                             </button>
-                            <button class="btn btn-secondary btn-sm" onclick="selectAllExtracted(false)">
+                            <button class="btn btn-secondary btn-sm" onclick="window.importEngine.selectAll(false)">
                                 إلغاء التحديد
                             </button>
-                            <button class="btn btn-success" onclick="commitSelectedProducts()">
+                            <button class="btn btn-success" onclick="window.importEngine.commitSelected()">
                                 <i data-lucide="check-square"></i> إضافة المنتجات المحددة للكتالوج (<span id="selected-import-count">0</span>)
                             </button>
                         </div>

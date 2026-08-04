@@ -1,0 +1,10 @@
+js/extracted_drive_products.json
+*.json
+*.zip
+*.tar.gz
+pdf_files/
+deploy_bundle.tar.gz
+assets/products/
+*.jpeg
+*.png
+*.jpg

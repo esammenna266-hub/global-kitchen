@@ -131,7 +131,7 @@ class SmartImportEngine {
             const sku = skuIdx !== -1 && row[skuIdx] ? String(row[skuIdx]).trim() : 'GK-EXCEL-' + (i + 100);
             let image = imageIdx !== -1 && row[imageIdx] ? String(row[imageIdx]).trim() : '';
             const category = catIdx !== -1 && row[catIdx] ? String(row[catIdx]).trim() : sheetName || 'استيراد إكسيل';
-            if (!image || !image.startsWith('http')) image = this.getSampleImageForCategory(title, i);
+            if (!image) image = this.getSampleImageForCategory(title, i);
             results.push({
                 id: 'import-' + Math.random().toString(36).substr(2, 9),
                 title, costPrice, price: sellingPrice, profitMargin: 30, sku, category, image,

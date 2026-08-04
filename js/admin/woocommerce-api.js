@@ -5,62 +5,41 @@
 
 const STORAGE_KEYS = {
     SETTINGS: 'woodash_wc_settings',
-    PRODUCTS: 'woodash_products',
+    PRODUCTS: 'woodash_products_empty_v5',
     ORDERS: 'woodash_orders',
     CUSTOMERS: 'woodash_customers'
 };
 
 function getGlobalKitchenSeedProducts() {
     if (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS) && PRODUCTS.length > 0) {
-        return PRODUCTS.map(p => {
-            let catName = 'منظمات ومؤونة';
-            if (p.category === 'utensils') catName = 'أدوات ومستلزمات المطبخ';
-            else if (p.category === 'tableware') catName = 'تقديم وسفرة فاخرة';
-
-            const costPrice = parseFloat(p.price) || 1.50;
-            const profitMargin = 30; // 30% Standard Default Profit Margin
-            const sellingPrice = parseFloat((costPrice * 1.30).toFixed(2));
+        return PRODUCTS.map((p, idx) => {
+            const costPrice = parseFloat(p.price || p.costPrice) || 5.00;
+            const profitMargin = parseFloat(p.profitMargin !== undefined ? p.profitMargin : 30);
+            const sellingPrice = parseFloat(p.sellingPrice || (costPrice * 1.30).toFixed(2));
+            const isFlash = profitMargin < 30;
 
             return {
-                id: "gk-prod-" + p.id,
-                title: p.nameAR || p.nameEN,
-                nameEN: p.nameEN,
-                sku: "GK-" + p.id,
+                id: "gk-prod-" + (p.id || idx + 1000),
+                title: p.nameAR || p.nameEN || p.title,
+                nameEN: p.nameEN || p.title,
+                sku: p.sku || ("GK-" + (idx + 1000)),
                 costPrice: costPrice,
                 profitMargin: profitMargin,
                 price: sellingPrice,
                 originalPrice: sellingPrice,
                 regular_price: sellingPrice,
-                isSale: false,
-                isFlashSale: false,
-                stock: Math.floor(12 + (p.id % 25)),
-                category: catName,
+                isSale: isFlash,
+                isFlashSale: isFlash,
+                stock: Math.floor(10 + (idx % 30)),
+                category: p.category || 'عام',
                 spec: p.specAR || p.specEN || '',
-                image: p.image,
-                source: 'متجر جلوبال كيتشن (Global Kitchen)',
-                description: `منتج ${p.nameAR} من تشكيلة Foly Life بالمواصفات: ${p.specAR || p.specEN || ''}`
+                image: p.image || 'assets/products/img_p1_1.jpeg',
+                source: p.source || 'كتالوج المورد',
+                description: p.specAR || p.title || ''
             };
         });
     }
-    return [
-        {
-            id: "prod-101",
-            title: "علبة مونة صغيرة فوميه غطاء سحب ١.٢ لتر",
-            sku: "GK-101",
-            costPrice: 1.60,
-            profitMargin: 30,
-            price: 2.08,
-            originalPrice: 2.08,
-            regular_price: 2.08,
-            isSale: false,
-            isFlashSale: false,
-            stock: 24,
-            category: "منظمات ومؤونة",
-            image: "assets/products/img_p1_1.jpeg",
-            source: "متجر جلوبال كيتشن (Global Kitchen)",
-            description: "علبة مونة صغيرة فوميه غطاء سحب ١.٢ لتر"
-        }
-    ];
+    return [];
 }
 
 const INITIAL_DEMO_ORDERS = [
@@ -91,10 +70,14 @@ class WooCommerceStoreManager {
     }
 
     initStorage() {
-        if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
-            const seedProducts = getGlobalKitchenSeedProducts();
-            localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(seedProducts));
-        }
+        // Clear all legacy cache keys from user browser
+        localStorage.removeItem('woodash_products');
+        localStorage.removeItem('woodash_products_v2');
+        localStorage.removeItem('woodash_products_v3');
+        localStorage.removeItem('woodash_products_clean_v4');
+        
+        const seedProducts = getGlobalKitchenSeedProducts();
+        localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(seedProducts));
         if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
             localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(INITIAL_DEMO_ORDERS));
         }
